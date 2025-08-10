@@ -7,6 +7,7 @@ class Team(models.Model):
     founded = models.DateField()
     coach = models.CharField(max_length=100)
     manager = models.CharField(max_length=100, blank=True, null=True)
+    logo = models.ImageField(upload_to='team_logos/', blank=True, null=True)  # 🆕 logo týmu
 
     def __str__(self):
         return self.name
@@ -55,18 +56,23 @@ class Player(models.Model):
     def has_scoring_stats(self):
         return self.position in ['FW', 'MF', 'DF']
 
+# 🧑‍💼 Role týmu
+class StaffRole(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
 # 🧑‍💼 Vedení týmu
 class StaffMember(models.Model):
     name = models.CharField(max_length=100)
-    role = models.CharField(max_length=50, choices=[
-        ('Coach', 'Coach'),
-        ('Manager', 'Manager'),
-        ('Physio', 'Physiotherapist'),
-    ])
+    role = models.ForeignKey(StaffRole, on_delete=models.SET_NULL, null=True, related_name='members')
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='staff')
 
     def __str__(self):
         return f"{self.role}: {self.name}"
+
 
 # 🏆 Soutěž (liga, turnaj, přátelský zápas)
 class Competition(models.Model):
