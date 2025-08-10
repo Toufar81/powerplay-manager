@@ -11,22 +11,49 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
-# 👤 Hráč
+
 class Player(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    birth_date = models.DateField()
-    position = models.CharField(max_length=30, choices=[
+    POSITION_CHOICES = [
         ('GK', 'Goalkeeper'),
         ('DF', 'Defender'),
         ('MF', 'Midfielder'),
         ('FW', 'Forward'),
-    ])
+    ]
+
+    # 🧍‍♂️ Základní údaje
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    nickname = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text="Jméno na dresu nebo přezdívka"
+    )
+    birth_date = models.DateField()
     number = models.PositiveIntegerField()
+    position = models.CharField(max_length=30, choices=POSITION_CHOICES)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='players')
 
+    # 📸 Fotka hráče
+    photo = models.ImageField(upload_to='player_photos/', blank=True, null=True)
+
+    # 📊 Statistiky
+    matches_played = models.PositiveIntegerField(default=0)
+    penalty_minutes = models.PositiveIntegerField(default=0)
+
+    # Pro MF, FW, DF
+    goals_scored = models.PositiveIntegerField(default=0)
+
+    # Pro GK
+    goals_conceded = models.PositiveIntegerField(default=0)
+
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.number})"
+        return f"{self.nickname or self.first_name} {self.last_name} ({self.number})"
+
+    def is_goalkeeper(self):
+        return self.position == 'GK'
+
+    def has_scoring_stats(self):
+        return self.position in ['FW', 'MF', 'DF']
 
 # 🧑‍💼 Vedení týmu
 class StaffMember(models.Model):
