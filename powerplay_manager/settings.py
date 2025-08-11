@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'powerplay_app',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
