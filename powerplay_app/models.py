@@ -12,49 +12,50 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
+# 🧩 Typy pozic
+POSITION_TYPES = [
+    ('Offensive', 'Offensive'),
+    ('Defensive', 'Defensive'),
+    ('Goalkeeper', 'Goalkeeper'),
+]
+
+class PlayerPosition(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=50)
+    position_type = models.CharField(max_length=20, choices=POSITION_TYPES, default='Offensive')
+    can_score = models.BooleanField(default=True)
+    can_concede = models.BooleanField(default=False)
+    can_assist = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
 
 class Player(models.Model):
-    POSITION_CHOICES = [
-        ('GK', 'Goalkeeper'),
-        ('DF', 'Defender'),
-        ('MF', 'Midfielder'),
-        ('FW', 'Forward'),
-    ]
-
-    # 🧍‍♂️ Základní údaje
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    nickname = models.CharField(
-        max_length=30,
-        blank=True,
-        help_text="Jméno na dresu nebo přezdívka"
-    )
+    nickname = models.CharField(max_length=30, blank=True, help_text="Jméno na dresu nebo přezdívka")
     birth_date = models.DateField()
     number = models.PositiveIntegerField()
-    position = models.CharField(max_length=30, choices=POSITION_CHOICES)
+    position = models.ForeignKey(PlayerPosition, on_delete=models.SET_NULL, null=True, blank=True, related_name='players')
+
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='players')
 
-    # 📸 Fotka hráče
     photo = models.ImageField(upload_to='player_photos/', blank=True, null=True)
 
-    # 📊 Statistiky
     matches_played = models.PositiveIntegerField(default=0)
     penalty_minutes = models.PositiveIntegerField(default=0)
-
-    # Pro MF, FW, DF
     goals_scored = models.PositiveIntegerField(default=0)
-
-    # Pro GK
     goals_conceded = models.PositiveIntegerField(default=0)
+    assists = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.nickname or self.first_name} {self.last_name} ({self.number})"
 
     def is_goalkeeper(self):
-        return self.position == 'GK'
+        return self.position and self.position.code == 'GK'
 
     def has_scoring_stats(self):
-        return self.position in ['FW', 'MF', 'DF']
+        return self.position and self.position.can_score
 
 # 🧑‍💼 Role týmu
 class StaffRole(models.Model):
@@ -89,15 +90,26 @@ class Competition(models.Model):
     def __str__(self):
         return f"{self.name} ({self.type})"
 
+
+class Stadion(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    address = models.CharField(max_length=200)
+    map_url = models.URLField(blank=True, null=True, help_text="Odkaz na mapu nebo Google Maps")
+
+    def __str__(self):
+        return self.name
+
+
 # ⚔️ Zápas
 class Match(models.Model):
     date = models.DateTimeField()
-    location = models.CharField(max_length=100)
+    stadion = models.ForeignKey(Stadion, on_delete=models.SET_NULL, null=True, blank=True)
     is_internal = models.BooleanField(default=False)
     competition = models.ForeignKey(Competition, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return f"Match on {self.date.strftime('%Y-%m-%d')}"
+        return f"{self.stadion} – {self.date.strftime('%Y-%m-%d')}"
+
 
 # 🧩 Strana zápasu (Black/White nebo skutečný tým)
 class MatchTeam(models.Model):
