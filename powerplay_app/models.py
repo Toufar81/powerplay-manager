@@ -86,16 +86,26 @@ class Match(models.Model):
 
 class MatchLineup(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, blank=True, null=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, editable=False)
     is_starting = models.BooleanField(default=True)
+    goals = models.PositiveIntegerField(default=0, blank=True)
+    assists = models.PositiveIntegerField(default=0, blank=True)
+    penalty_minutes = models.PositiveIntegerField(default=0, blank=True)
+    goals_conceded = models.PositiveIntegerField(default=0, blank=True)
 
-    goals = models.PositiveIntegerField(default=0)
-    assists = models.PositiveIntegerField(default=0)
-    penalty_minutes = models.PositiveIntegerField(default=0)
-    goals_conceded = models.PositiveIntegerField(default=0)  # pouze pro brankáře
+    def save(self, *args, **kwargs):
+        if self.match:
+            if self.player.current_team == self.match.home_team:
+                self.team = self.match.home_team
+            elif self.player.current_team == self.match.away_team:
+                self.team = self.match.away_team
+        super().save(*args, **kwargs)
 
     def __str__(self):
+        return ""  # pro admin inline
+
+    def get_display_name(self):
         return f"{self.player} - {self.match}"
 
 

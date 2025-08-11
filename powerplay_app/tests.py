@@ -60,7 +60,8 @@ class ModelsTestCase(TestCase):
             goals_conceded=0
         )
         self.assertEqual(lineup.goals, 1)
-        self.assertEqual(str(lineup), f"{self.player} - {self.match}")
+        self.assertEqual(lineup.get_display_name(), f"{self.player} - {self.match}")
+
 
     def test_staff_role_str(self):
         staff = StaffRole.objects.create(role="coach", name="Petr Rada", team=self.team_home)
