@@ -85,17 +85,34 @@ class Match(models.Model):
 
 
 class MatchLineup(models.Model):
+    class Line(models.IntegerChoices):
+        FIRST = 1, "1. lajna"
+        SECOND = 2, "2. lajna"
+        THIRD = 3, "3. lajna"
+        SUBSTITUTES = 4, "Náhradníci"
+
+    class PositionDetail(models.TextChoices):
+        LW = "LW", "Levé křídlo"
+        C = "C", "Střed"
+        RW = "RW", "Pravé křídlo"
+        LD = "LD", "Levý obránce"
+        RD = "RD", "Pravý obránce"
+        G = "G", "Brankář"
+
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE, blank=True, null=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, editable=False)
     is_starting = models.BooleanField(default=True)
+    line_number = models.IntegerField(choices=Line.choices, blank=True, null=True)
+    position_detail = models.CharField(max_length=2, choices=PositionDetail.choices, blank=True, null=True)
+
     goals = models.PositiveIntegerField(default=0, blank=True)
     assists = models.PositiveIntegerField(default=0, blank=True)
     penalty_minutes = models.PositiveIntegerField(default=0, blank=True)
     goals_conceded = models.PositiveIntegerField(default=0, blank=True)
 
     def save(self, *args, **kwargs):
-        if self.match:
+        if self.match and self.player:
             if self.player.current_team == self.match.home_team:
                 self.team = self.match.home_team
             elif self.player.current_team == self.match.away_team:
@@ -103,10 +120,7 @@ class MatchLineup(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return ""  # pro admin inline
-
-    def get_display_name(self):
-        return f"{self.player} - {self.match}"
+        return f"{self.player} ({self.get_line_number_display()} - {self.get_position_detail_display()})"
 
 
 # ===== 5. ROLE A VEDENÍ =====

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from datetime import date, datetime
-from .models import Competition, Team, Stadium, Player, Match, MatchLineup, StaffRole
+from powerplay_app.models import Competition, Team, Stadium, Player, Match, MatchLineup, StaffRole
 
 class ModelsTestCase(TestCase):
     def setUp(self):
@@ -48,19 +48,17 @@ class ModelsTestCase(TestCase):
     def test_match_str(self):
         self.assertIn("FK Teplice vs Slavia Praha", str(self.match))
 
+    # tests_models.py
     def test_match_lineup_creation(self):
         lineup = MatchLineup.objects.create(
             match=self.match,
-            team=self.team_home,
             player=self.player,
-            is_starting=True,
-            goals=1,
-            assists=0,
-            penalty_minutes=2,
-            goals_conceded=0
+            line_number=1,
+            position_detail='C',
+            goals=2
         )
-        self.assertEqual(lineup.goals, 1)
-        self.assertEqual(lineup.get_display_name(), f"{self.player} - {self.match}")
+        self.assertEqual(lineup.player, self.player)
+        self.assertEqual(lineup.match, self.match)
 
 
     def test_staff_role_str(self):

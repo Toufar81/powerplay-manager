@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Competition, Stadium, Team, Player, Match, MatchLineup, StaffRole
-from .forms import MatchLineupForm
+from .forms import MatchLineupForm, MatchLineupInlineFormSet
 
 @admin.register(Competition)
 class CompetitionAdmin(admin.ModelAdmin):
@@ -31,14 +31,20 @@ class PlayerAdmin(admin.ModelAdmin):
 class MatchLineupInline(admin.TabularInline):
     model = MatchLineup
     extra = 5
-    fields = ('player', 'team', 'is_starting', 'goals', 'assists', 'penalty_minutes', 'goals_conceded')
+    list_display = ('player', 'team', 'match', 'line_number', 'position_detail', 'goals', 'assists')
     readonly_fields = ('team',)
 
 class HomeLineupInline(admin.TabularInline):
     model = MatchLineup
     form = MatchLineupForm
+    formset = MatchLineupInlineFormSet
     extra = 0
-    fields = ('player', 'is_starting', 'goals', 'assists', 'penalty_minutes', 'goals_conceded')
+    fields = (
+        'player', 'is_starting',
+        'line_number', 'position_detail',
+        'goals', 'assists', 'penalty_minutes', 'goals_conceded'
+    )
+
     verbose_name = "Hráč domácího týmu"
     verbose_name_plural = "Sestava domácího týmu"
 
@@ -64,8 +70,14 @@ class HomeLineupInline(admin.TabularInline):
 class AwayLineupInline(admin.TabularInline):
     model = MatchLineup
     form = MatchLineupForm
+    formset = MatchLineupInlineFormSet
     extra = 0
-    fields = ('player', 'is_starting', 'goals', 'assists', 'penalty_minutes', 'goals_conceded')
+    fields = (
+        'player', 'is_starting',
+        'line_number', 'position_detail',
+        'goals', 'assists', 'penalty_minutes', 'goals_conceded'
+    )
+
     verbose_name = "Hráč hostujícího týmu"
     verbose_name_plural = "Sestava hostujícího týmu"
 
