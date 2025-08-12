@@ -57,6 +57,7 @@ class Player(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     jersey_number = models.PositiveIntegerField()
+    nickname = models.CharField(max_length=10, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     position = models.CharField(max_length=2, choices=Position.choices)
@@ -135,7 +136,10 @@ class StaffRole(models.Model):
     ]
     role = models.CharField(max_length=20, choices=ROLES)
     name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    photos = models.ImageField(upload_to='staff/photos/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.get_role_display()} - {self.name}"

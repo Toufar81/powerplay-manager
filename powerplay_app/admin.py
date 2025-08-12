@@ -23,7 +23,7 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'jersey_number', 'position', 'current_team')
+    list_display = ('first_name', 'last_name', 'nickname','jersey_number', 'position', 'current_team')
     list_filter = ('position', 'current_team')
     search_fields = ('first_name', 'last_name')
 
@@ -115,7 +115,6 @@ class MatchAdmin(admin.ModelAdmin):
                     inline.verbose_name_plural = f"Sestava hostujícího týmu – {obj.away_team.name}"
             inline_instances.append(inline)
         return inline_instances
-
 
 
 
