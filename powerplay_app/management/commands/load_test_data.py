@@ -37,23 +37,31 @@ class Command(BaseCommand):
             Player.objects.create(
                 first_name=f"Hráč{i}", last_name="Pole", jersey_number=i,
                 position=Player.Position.FORWARD, birth_date=date(1990, 1, i),
+                email=f"hrac{i}@cerveny.cz",
+                phone_number=f"+4206000000{i:02}",
                 current_team=team1
             )
             Player.objects.create(
                 first_name=f"Hráč{i}", last_name="Pole", jersey_number=50 + i,
                 position=Player.Position.DEFENSE, birth_date=date(1991, 2, i),
+                email=f"hrac{i}@modry.cz",
+                phone_number=f"+4207000000{i:02}",
                 current_team=team2
             )
 
         for i in range(2):
             Player.objects.create(
-                first_name=f"Brankář{i+1}", last_name="Červený", jersey_number=90 + i,
-                position=Player.Position.GOALKEEPER, birth_date=date(1988, 3, i+1),
+                first_name=f"Brankář{i + 1}", last_name="Červený", jersey_number=90 + i,
+                position=Player.Position.GOALKEEPER, birth_date=date(1988, 3, i + 1),
+                email=f"brankar{i + 1}@cerveny.cz",
+                phone_number=f"+4208000000{i + 1:02}",
                 current_team=team1
             )
             Player.objects.create(
-                first_name=f"Brankář{i+1}", last_name="Modrý", jersey_number=99 + i,
-                position=Player.Position.GOALKEEPER, birth_date=date(1989, 4, i+1),
+                first_name=f"Brankář{i + 1}", last_name="Modrý", jersey_number=99 + i,
+                position=Player.Position.GOALKEEPER, birth_date=date(1989, 4, i + 1),
+                email=f"brankar{i + 1}@modry.cz",
+                phone_number=f"+4209000000{i + 1:02}",
                 current_team=team2
             )
 

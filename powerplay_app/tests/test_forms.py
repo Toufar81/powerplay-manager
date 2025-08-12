@@ -24,11 +24,16 @@ class MatchLineupFormSetTest(TestCase):
         self.player1 = Player.objects.create(
             first_name="Libor", last_name="Novák", jersey_number=10,
             position=Player.Position.FORWARD, birth_date=date(2000, 1, 1),
+            email="libor.novak@example.com",
+            phone_number="+420123456789",
             current_team=self.team_home
         )
+
         self.player2 = Player.objects.create(
             first_name="Jan", last_name="Brankář", jersey_number=1,
             position=Player.Position.GOALKEEPER, birth_date=date(1999, 5, 5),
+            email="jan.brankar@example.com",
+            phone_number="+420987654321",
             current_team=self.team_home
         )
 
@@ -120,7 +125,10 @@ class MatchLineupFormSetTest(TestCase):
             player = Player.objects.create(
                 first_name=f"Hráč{i}", last_name="Pole", jersey_number=100 + i,
                 position=Player.Position.FORWARD, birth_date=date(1990, 1, i),
-                current_team=self.team_home
+                current_team=self.team_home,
+                email = f"hrac{i}@example.com",
+                phone_number = f"+4206000000{i}",
+
             )
             extra_players.append(player)
 

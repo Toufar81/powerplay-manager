@@ -57,6 +57,8 @@ class Player(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     jersey_number = models.PositiveIntegerField()
+    email = models.EmailField(blank=True, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     position = models.CharField(max_length=2, choices=Position.choices)
     birth_date = models.DateField()
     photo = models.ImageField(upload_to='players/', blank=True, null=True)
