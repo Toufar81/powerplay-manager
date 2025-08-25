@@ -19,12 +19,22 @@ def get_primary_team() -> Optional[Team]:
 
     Resolution precedence:
         1. ``settings.PRIMARY_TEAM_ID`` – exact ID match.
-        2. ``settings.PRIMARY_TEAM_SLUG`` – case-insensitive match against ``Team.name``.
+        2. ``settings.PRIMARY_TEAM_SLUG`` – case-insensitive match against
+           ``Team.name``.
         3. Fallback: the first team by ``id`` (if any).
+
+    Args:
+        None.
 
     Returns:
         Optional[Team]: The resolved team instance, or ``None`` when no team
         exists in the database.
+
+    Side Effects:
+        Performs read-only database queries. No data is modified.
+
+    Raises:
+        None.
     """
     team: Optional[Team] = None
 
