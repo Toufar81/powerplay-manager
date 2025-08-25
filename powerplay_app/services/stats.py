@@ -54,10 +54,17 @@ def player_season_totals_qs(team: Team) -> QuerySet[PlayerSeasonTotals]:
           line 0 (slot ``G``), split by home/away side.
 
     Args:
-        team: Team whose players should be aggregated.
+        team (Team): Team whose players should be aggregated.
 
     Returns:
         QuerySet[PlayerSeasonTotals]: Players with additional annotation fields.
+
+    Side Effects:
+        None. The returned queryset is lazily evaluated and does not modify the
+        database until acted upon.
+
+    Raises:
+        None.
     """
     qs: QuerySet[PlayerSeasonTotals] = PlayerSeasonTotals.objects.filter(team=team)
 
@@ -95,7 +102,22 @@ def player_season_totals_qs(team: Team) -> QuerySet[PlayerSeasonTotals]:
 
 
 def games_for_team(team: Team) -> QuerySet[Game]:
-    """Return all games where the team is home or away (select-related)."""
+    """Return all games where the team is home or away.
+
+    Args:
+        team (Team): Team whose games should be listed.
+
+    Returns:
+        QuerySet[Game]: Lazily evaluated queryset of the team's games with
+        related ``home_team`` and ``away_team`` preloaded.
+
+    Side Effects:
+        None. The function only constructs a queryset and does not hit the
+        database until the queryset is evaluated.
+
+    Raises:
+        None.
+    """
     return (
         Game.objects.select_related("home_team", "away_team")
         .filter(Q(home_team=team) | Q(away_team=team))
@@ -115,6 +137,19 @@ def recompute_game(game: Game) -> None:
           that game. Empty slots are ignored.
         - If a player appears multiple times as goalie for the same game
           (misconfiguration), the last save wins but the value is identical.
+
+    Args:
+        game (Game): Game instance whose statistics should be recomputed.
+
+    Returns:
+        None: The function updates the database in place.
+
+    Side Effects:
+        Persists updated ``Game`` scores and ``PlayerStats`` records to the
+        database.
+
+    Raises:
+        None.
     """
     home_id = game.home_team_id
     away_id = game.away_team_id
