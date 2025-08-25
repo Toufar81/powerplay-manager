@@ -26,6 +26,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # override
         """Build minimal context required by the dashboard template.
 
+        Args:
+            **kwargs: Extra context kwargs passed by Django.
+
         Returns:
             Template context with ``current`` set to ``"dashboard"`` for
             active navigation highlighting.

@@ -43,6 +43,9 @@ class CalendarView(TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # override
         """Provide event lists and a fallback game list.
 
+        Args:
+            **kwargs: Extra context kwargs passed by Django.
+
         Returns:
             Template context with keys ``primary_team``, ``events``,
             ``fallback_games``, and date range markers.

@@ -48,6 +48,9 @@ class FeedbackView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # type: ignore[override]
         """Assemble list and form for the primary team.
 
+        Args:
+            **kwargs: Extra context kwargs passed by Django.
+
         Returns:
             Template context including ``primary_team``, ``items``, ``form``,
             optional range hints, and the current menu marker.
@@ -83,6 +86,11 @@ class FeedbackView(LoginRequiredMixin, TemplateView):
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """Validate and create a feedback entry; preserve original UX.
+
+        Args:
+            request: Current HTTP request.
+            *args: Unused positional arguments.
+            **kwargs: Unused keyword arguments.
 
         Returns:
             Redirect back to the feedback page on success or team resolution

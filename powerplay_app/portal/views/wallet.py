@@ -81,6 +81,12 @@ class WalletView(LoginRequiredMixin, TemplateView):
     def _years_for_team(self, team: "Team" | None) -> list[int]:
         """Return all years with any transactions; fallback to current year.
 
+        Args:
+            team: Team to inspect or ``None``.
+
+        Returns:
+            list[int]: Available years for the filter dropdown.
+
         The query uses ``.dates('date', 'year')`` to keep it database-side, then
         extracts unique years for the filter dropdown.
         """
@@ -106,6 +112,12 @@ class WalletView(LoginRequiredMixin, TemplateView):
     # ---- view --------------------------------------------------------------
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # type: ignore[override]
         """Assemble filter values, compute aggregates, and provide lists.
+
+        Args:
+            **kwargs: Extra context kwargs passed by Django.
+
+        Returns:
+            dict[str, Any]: Template context for the wallet view.
 
         Notes:
             - Keeps defaults stable even if there is no team yet.

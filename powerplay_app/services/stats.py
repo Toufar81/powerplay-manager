@@ -95,7 +95,14 @@ def player_season_totals_qs(team: Team) -> QuerySet[PlayerSeasonTotals]:
 
 
 def games_for_team(team: Team) -> QuerySet[Game]:
-    """Return all games where the team is home or away (select-related)."""
+    """Return games where the team is home or away.
+
+    Args:
+        team: Team whose games should be fetched.
+
+    Returns:
+        QuerySet[Game]: Games with related teams selected for performance.
+    """
     return (
         Game.objects.select_related("home_team", "away_team")
         .filter(Q(home_team=team) | Q(away_team=team))
@@ -104,6 +111,12 @@ def games_for_team(team: Team) -> QuerySet[Game]:
 
 def recompute_game(game: Game) -> None:
     """Recompute a game's score and per-player stats from atomic events.
+
+    Args:
+        game: Game instance to recompute.
+
+    Returns:
+        None
 
     What is recomputed:
         - Game score (from ``Goal`` events per team).
