@@ -2,8 +2,6 @@
 """Team-related service helpers.
 
 Internal documentation is in English; user-facing strings remain Czech.
-Behavior preserved: only Google-style docstrings, type hints, and light
-formatting were added.
 """
 
 from __future__ import annotations

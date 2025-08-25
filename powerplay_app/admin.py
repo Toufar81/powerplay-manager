@@ -88,6 +88,14 @@ for model in (
 def regenerate_calendar_events(modeladmin: Any, request: Any, queryset: Any) -> None:
     """Re-sync calendar events for selected games.
 
+    Args:
+        modeladmin: Django admin interface instance.
+        request: Current HTTP request.
+        queryset: Games selected for resynchronization.
+
+    Returns:
+        None
+
     Notes:
         UI text remains Czech; action reuses the app's sync helper.
     """
@@ -111,7 +119,15 @@ class LeagueAdmin(admin.ModelAdmin):
 
     @admin.action(description="Načíst/aktualizovat zápasy z webu (Playwright)")
     def sync_results_for_league(self, request: Any, queryset: Any) -> None:
-        """Fetch/update league matches using the custom management command."""
+        """Fetch and update league matches using the custom management command.
+
+        Args:
+            request: Current HTTP request.
+            queryset: Selected leagues; expects exactly one.
+
+        Returns:
+            None
+        """
         if queryset.count() != 1:
             self.message_user(request, "Vyber přesně jednu ligu.", level=messages.ERROR)
             return
