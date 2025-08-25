@@ -1,3 +1,12 @@
+"""Populate the database with a full set of sample hockey data.
+
+The command is intended for development purposes: it wipes existing
+league, team and game objects and recreates them with realistic test
+records including lines, assignments, goals and penalties. **WARNING:**
+All existing data in these tables will be deleted before new entries
+are created.
+"""
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import date, datetime
@@ -12,6 +21,17 @@ class Command(BaseCommand):
     help = "Naplní databázi realistickými testovacími daty pro ligu, týmy, hráče a zápasy (včetně postů v lajnách)."
 
     def handle(self, *args, **options):
+        """Create deterministic test records for a demo league.
+
+        No positional arguments or options are required. The command
+        first purges existing related tables to avoid foreign-key
+        conflicts, then builds a small league with stadiums, teams,
+        players, scheduled games, line combinations and random events.
+        Progress messages are written to ``stdout`` and game statistics
+        are recomputed at the end. Running this command replaces any
+        existing data and should only be used in a disposable
+        environment.
+        """
         self.stdout.write("⚙️  Resetuji stávající testovací data…")
         # Smazat v bezpečném pořadí kvůli FK
         Goal.objects.all().delete()
