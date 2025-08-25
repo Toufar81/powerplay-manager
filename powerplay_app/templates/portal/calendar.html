@@ -1,10 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "portal/base.html" %}
 
-</body>
-</html>
+{% block title %}Kalendář | Portál{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="section__title">Kalendář týmových akcí</h1>
+
+    {% if events and events|length %}
+      <div class="card mt-2">
+        <ul class="clean-list">
+          {% for e in events %}
+          <li style="display:grid;grid-template-columns:180px 1fr;gap:.75rem;padding:.5rem 0;border-top:1px solid var(--c-border);">
+            <div class="muted">{{ e.starts_at|date:"j. n. Y, H:i" }}</div>
+            <div>
+              <strong>{{ e.get_event_type_display }}</strong> — {{ e.title }}
+              {% if e.stadium %}<span class="muted"> • {{ e.stadium.name }}</span>{% endif %}
+              {% if e.related_game_id %}
+                <div class="muted" style="font-size:.9rem;">
+                  {{ e.related_game.home_team.name }} vs {{ e.related_game.away_team.name }}
+                </div>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    {% elif fallback_games and fallback_games|length %}
+      <div class="flash__item" style="margin:.75rem 0;">
+        Kalendář zatím nemá vytvořené události. Zobrazuji přímo <strong>nadcházející zápasy</strong>
+        (do {{ range_end|date:"j. n." }}).
+      </div>
+      <div class="card mt-2">
+        <ul class="clean-list">
+          {% for g in fallback_games %}
+          <li style="display:grid;grid-template-columns:180px 1fr;gap:.75rem;padding:.5rem 0;border-top:1px solid var(--c-border);">
+            <div class="muted">{{ g.starts_at|date:"j. n. Y, H:i" }}</div>
+            <div>
+              <strong>{{ g.home_team.name }}</strong>
+              <span class="muted">vs</span>
+              <strong>{{ g.away_team.name }}</strong>
+              {% if g.stadium %}<span class="muted"> • {{ g.stadium.name }}</span>{% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    {% else %}
+      <div class="card mt-2">
+        <div class="muted">V nejbližších 30 dnech není žádná událost.</div>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

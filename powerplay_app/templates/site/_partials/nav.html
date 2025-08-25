@@ -1,10 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<nav class="nav" role="navigation" aria-label="Hlavní navigace">
+  <div class="container nav__inner">
+    <a class="brand" href="{% url 'site:home' %}">
+      <span class="brand__dot" aria-hidden="true"></span>
+      {% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %}
+    </a>
 
-</body>
-</html>
+    {% with current=request.resolver_match.url_name|default:'' %}
+    <ul class="nav__menu" role="menubar">
+      <li class="nav__item" role="none">
+        <a role="menuitem" class="nav__link {% if current == 'home' %}is-active{% endif %}" href="{% url 'site:home' %}">Domů</a>
+      </li>
+      <li class="nav__item" role="none">
+        <a role="menuitem" class="nav__link {% if current == 'league' %}is-active{% endif %}" href="{% url 'site:league' %}">Liga</a>
+      </li>
+      <li class="nav__item" role="none">
+        <a role="menuitem" class="nav__link {% if current == 'players' %}is-active{% endif %}" href="{% url 'site:players' %}">Hráči</a>
+      </li>
+      <li class="nav__item" role="none">
+        <a role="menuitem" class="nav__link {% if current == 'staff' %}is-active{% endif %}" href="{% url 'site:staff' %}">Vedení</a>
+      </li>
+      <li class="nav__item" role="none">
+        <a role="menuitem" class="nav__link {% if current == 'contact' %}is-active{% endif %}" href="{% url 'site:contact' %}">Kontakt</a>
+      </li>
+    </ul>
+    {% endwith %}
+
+    <div class="nav__auth">
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'site:logout' %}" class="auth auth--logout">
+          {% csrf_token %}
+          <button type="submit" class="auth__btn">
+            Odhlásit <span class="auth__user">{{ user.get_username }}</span>
+          </button>
+        </form>
+      {% else %}
+        <a class="auth__link" href="{% url 'site:login' %}?next={{ request.path }}">Přihlásit</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="breadcrumbs">
+      {% block crumbs %}Domů{% endblock %}
+    </div>
+  </div>
+</nav>

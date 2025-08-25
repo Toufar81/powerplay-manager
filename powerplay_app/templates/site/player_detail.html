@@ -1,10 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "site/base.html" %}
 
-</body>
-</html>
+{% block title %}{{ player.first_name }} {{ player.last_name }} | Hráči | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
+{% block crumbs %}Domů / <a href="{% url 'site:players' %}" class="link">Hráči</a> / {{ player.first_name }} {{ player.last_name }}{% endblock %}
+
+{% block content %}
+<section class="player-hero">
+  <div class="container player-hero__inner">
+    <div class="player-hero__media">
+      <img class="player-hero__photo" src="{{ player.photo_url }}" alt="{{ player.first_name }} {{ player.last_name }}" width="240" height="240" />
+    </div>
+    <div class="player-hero__body">
+      <div class="player-hero__top">
+        {% if player.jersey_number %}<span class="jersey jersey--xl">#{{ player.jersey_number }}</span>{% endif %}
+        <h1 class="player-hero__name">{{ player.first_name }} {{ player.last_name }}</h1>
+      </div>
+      <div class="player-hero__meta">
+        <span class="badge">{{ player.get_position_display }}</span>
+        {% if age %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ age }} let</span>{% endif %}
+        {% if player.country %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ player.country.name }}</span>{% endif %}
+      </div>
+      <div class="player-hero__contacts">
+        {% if player.email %}<a class="link" href="mailto:{{ player.email }}">{{ player.email }}</a>{% endif %}
+        {% if player.phone %}
+          {% if player.email %}<span class="dot" aria-hidden="true"></span>{% endif %}
+          <a class="link" href="tel:{{ player.phone|cut:" " }}">{{ player.phone }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section__title">Informace</h2>
+    <div class="info-grid mt-2">
+      <div class="info-row"><span class="info-k">Pozice</span><span class="info-v">{{ player.get_position_display }}</span></div>
+      <div class="info-row"><span class="info-k">Číslo dresu</span><span class="info-v">{% if player.jersey_number %}#{{ player.jersey_number }}{% else %}—{% endif %}</span></div>
+      <div class="info-row"><span class="info-k">Tým</span><span class="info-v">{% if player.team %}{{ player.team.name }}{% else %}—{% endif %}</span></div>
+      <div class="info-row"><span class="info-k">Město</span><span class="info-v">{% if player.team and player.team.city %}{{ player.team.city }}{% else %}—{% endif %}</span></div>
+      <div class="info-row"><span class="info-k">Datum narození</span><span class="info-v">{% if player.birth_date %}{{ player.birth_date|date:'j. n. Y' }}{% else %}—{% endif %}</span></div>
+    </div>
+
+    {# Rezervované místo pro budoucí statistiky #}
+    <div class="mt-4">
+      <h2 class="section__title">Statistiky (sezóna)</h2>
+      <p class="muted">Přidáme v dalším kroku.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

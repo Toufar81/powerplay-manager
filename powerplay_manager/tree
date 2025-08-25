@@ -1,0 +1,58 @@
+powerplay_app/
+├── site/                              # Veřejná část (bez loginu) – prezentace pro širokou veřejnost
+│   ├── __init__.py
+│   ├── urls.py                        # Root router pro public – includuje urls_home/players/games/stats
+│   ├── urls_home.py                   # URL vzory pro homepage ("/")
+│   ├── urls_players.py                # URL vzory pro soupisku ("/hraci/")
+│   ├── urls_games.py                  # URL vzory pro zápasy ("/zapasy/", "/zapasy/<id>/")
+│   ├── urls_stats.py                  # URL vzory pro statistiky ("/statistiky/")
+│   └── views/
+│       ├── __init__.py
+│       ├── _base.py                   # Společné mixiny pro public (např. PrimaryTeamContextMixin)
+│       ├── home.py                    # HomeView – shrnutí (nejbližší zápas, poslední výsledky, tabulka)
+│       ├── players.py                 # RosterView – seznam hráčů primárního týmu
+│       ├── games.py                   # GamesListView + GameDetailView
+│       └── stats.py                   # StatsIndexView – přehled tým/hráči (použije services.stats)
+│
+├── portal/                            # Interní část (pro přihlášené hráče/staff)
+│   ├── __init__.py
+│   ├── urls.py                        # Root router portálu (`app_name="portal"`) – includuje dílčí urls_*
+│   ├── urls_dashboard.py              # URL vzory pro dashboard ("/portal/")
+│   ├── urls_calendar.py               # URL vzory pro kalendář akcí ("/portal/kalendar/")
+│   ├── urls_wallet.py                 # URL vzory pro klubovou pokladnu ("/portal/pokladna/")
+│   ├── urls_feedback.py               # URL vzory pro připomínky k zápasům ("/portal/pripominky/")
+│   └── views/
+│       ├── __init__.py
+│       ├── _base.py                   # LoginRequired + role mixiny + PrimaryTeamMixin (do contextu)
+│       ├── dashboard.py               # Dashboard pro hráče/staff (úkoly, notifikace, nejbližší akce)
+│       ├── calendar.py                # Přehled TeamEvent (filtrováno na primární tým + osobní účast)
+│       ├── wallet.py                  # Pokladna (placeholder pro budoucí příjmy/výdaje/settlementy)
+│       └── feedback.py                # Připomínky k zápasům (placeholder: formulář + seznam vlákna)
+│
+├── services/                          # Doménová logika znovupoužitelná napříč views (1 zdroj pravdy)
+│   ├── __init__.py
+│   ├── team.py                        # get_primary_team() – vrací instanci primárního týmu (z settings/DB)
+│   └── stats.py                       # player_season_totals_qs(team), helpers pro anotace statistik
+│
+└── templates/                         # HTML šablony (Django templates) pro site i portal
+    ├── site/
+    │   ├── base.html                  # Základní layout public části (hlavička, menu, patička)
+    │   ├── home.html                  # Homepage – widgety s daty primárního týmu
+    │   ├── players/
+    │   │   └── roster.html            # Soupiska (karty hráčů, fotky, čísla dresů)
+    │   ├── games/
+    │   │   ├── list.html              # Seznam zápasů (filtry, stránkování)
+    │   │   └── detail.html            # Detail zápasu (soupisky, góly, tresty, report)
+    │   ├── stats/
+    │   │   └── index.html             # Přehled statistik (team totals + hráči)
+    │   └── _partials/                 # Znovupoužitelné bloky
+    │       ├── game_row.html          # Jedna řádka zápasu (pro seznamy/boxy)
+    │       ├── player_card.html       # Karta hráče (foto, jméno, číslo)
+    │       └── pagination.html        # Stránkování (Bootstrap-friendly)
+    │
+    └── portal/
+        ├── base.html                  # Základní layout portálu (post-login navigace)
+        ├── dashboard.html             # Přehled interních informací (krátká shrnutí, odkazy)
+        ├── calendar.html              # Kalendář týmových akcí (table/agenda view)
+        ├── wallet.html                # Pokladna (přehled + formuláře – zatím placeholder)
+        └── feedback.html              # Připomínky k zápasům (list + form – placeholder)

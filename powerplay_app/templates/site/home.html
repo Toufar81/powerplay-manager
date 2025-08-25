@@ -1,10 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "site/base.html" %}
+{% load next_game %}
+{% load sponsors %}
+{% load latest_tags %}
 
-</body>
-</html>
+
+{% block title %}{% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div class="container">
+      <div class="hero__eyebrow">
+        {% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %}
+      </div>
+      <h1 class="hero__title">Vítej na webu týmu</h1>
+      <p class="hero__meta">Oficiální stránky klubu. Aktuálně pracujeme na nové veřejné části.</p>
+
+      <div class="card mt-4">
+        <h2 class="card__title">DEBUG</h2>
+        <p>primary_team:
+          {% if primary_team %}{{ primary_team.name }} | {{ primary_team.id }} | {{ primary_team.short_name }}{% else %}—{% endif %}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {# ——— Next Game strip ——— #}
+  {% next_game_strip %}
+
+
+  {# ——— Sponsors strip ——— #}
+  {% sponsors_strip %}
+
+  {# ___ Poslední zápas ___ #}
+  {% latest_match %}
+
+{% endblock %}

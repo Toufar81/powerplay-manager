@@ -1,10 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
 
+<!DOCTYPE html>
+{% load static %}
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Oficiální web týmu{% endblock %}" />
+  <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="site">
+  {% include "site/_partials/nav.html" %}
+
+  <main class="container">
+    {% if messages %}
+      <div class="flash">
+        {% for message in messages %}
+          <div class="flash__item flash__item--{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__left">&copy; {{ now|date:"Y" }} {% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %}</div>
+      <div class="footer__right">{% block footer_right %}{% endblock %}</div>
+    </div>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

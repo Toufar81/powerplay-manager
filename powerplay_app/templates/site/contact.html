@@ -1,10 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "site/base.html" %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Kontakt | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
+{% block crumbs %}Domů / Kontakt{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="section__title">Kontakt</h1>
+
+    <div class="card mt-2">
+      <h2 class="card__title">Stadion & místo</h2>
+      <div>
+        <div class="info-grid mt-2">
+          <div class="info-row"><span class="info-k">Stadion</span><span class="info-v">{% if team and team.stadium %}{{ team.stadium.name }}{% else %}—{% endif %}</span></div>
+          <div class="info-row"><span class="info-k">Adresa</span><span class="info-v">{% if team and team.stadium and team.stadium.address %}{{ team.stadium.address }}{% else %}—{% endif %}</span></div>
+          <div class="info-row"><span class="info-k">Město</span><span class="info-v">{% if team and team.city %}{{ team.city }}{% else %}—{% endif %}</span></div>
+        </div>
+        {% if team and team.stadium and team.stadium.map_url %}
+          <p class="mt-2"><a class="btn" href="{{ team.stadium.map_url }}" target="_blank" rel="noopener">Otevřít mapu</a></p>
+        {% endif %}
+      </div>
+    </div>
+
+    <h2 class="section__title mt-4">Kontaktní osoby</h2>
+    {% if staff %}
+      <div class="players-grid mt-2">
+        {% for m in staff %}
+          <div class="player-card" aria-label="Kontakt: {{ m.first_name }} {{ m.last_name }}">
+            <div class="player-card__media">
+              <img class="player-card__photo" src="{% if m.photo %}{{ m.photo.url }}{% else %}{% static 'powerplay_app/img/default_player.png' %}{% endif %}" alt="{{ m.first_name }} {{ m.last_name }}" loading="lazy" decoding="async" width="160" height="160" />
+            </div>
+            <div class="player-card__body">
+              <div class="player-card__top">
+                <h3 class="player-card__name">{{ m.first_name }} {{ m.last_name }}</h3>
+              </div>
+              <div class="player-card__meta">
+                <span class="badge">{{ m.role }}</span>
+              </div>
+              <div class="player-card__meta mt-2">
+                {% if m.email %}<a class="link" href="mailto:{{ m.email }}">{{ m.email }}</a>{% else %}<span class="muted">—</span>{% endif %}
+                {% if m.phone %}<span class="dot" aria-hidden="true"></span><a class="link" href="tel:{{ m.phone|cut:" " }}">{{ m.phone }}</a>{% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Zatím bez kontaktních osob.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

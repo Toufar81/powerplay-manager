@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+<!-- file: powerplay_app/templates/admin/dashboard/upcoming_events.html -->
+{% if module.children %}
+<ul class="upcoming-events">
+  {% for item in module.children %}
+    <li>{{ item|safe }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>Žádné plánované akce v příštích 14 dnech.</p>
+{% endif %}

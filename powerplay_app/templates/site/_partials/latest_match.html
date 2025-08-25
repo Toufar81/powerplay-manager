@@ -1,10 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<section class="section section--latest-match" aria-label="Poslední zápas">
+  <div class="container">
+    <header class="section__head">
+      <h2 class="section__title">Poslední zápas</h2>
+    </header>
 
-</body>
-</html>
+    {% if latest %}
+      <article class="match-card" role="article">
+        <div class="match-card__row">
+          <div class="match-card__team match-card__team--us">
+            <div class="match-card__name">{{ primary_team.name }}</div>
+            <div class="match-card__score">{{ latest.score_us }}</div>
+          </div>
+          <div class="match-card__vs">—</div>
+          <div class="match-card__team match-card__team--them">
+            <div class="match-card__name">{{ latest.opponent }}</div>
+            <div class="match-card__score">{{ latest.score_them }}</div>
+          </div>
+        </div>
+        <div class="match-card__meta">
+          <span class="badge badge--primary">{{ latest.result }}</span>
+          <span class="match-card__dot" aria-hidden="true">•</span>
+          <time datetime="{{ latest.datetime|date:'c' }}">{{ latest.datetime|date:'D j. n. Y' }}</time>
+          {% if latest.league %}
+            <span class="match-card__dot" aria-hidden="true">•</span>
+            <span>{{ latest.league }}</span>
+          {% endif %}
+          {% if latest.venue %}
+            <span class="match-card__dot" aria-hidden="true">•</span>
+            <span>{{ latest.venue }}</span>
+          {% endif %}
+          {% if latest.location %}
+            <span class="match-card__dot" aria-hidden="true">•</span>
+            <span>{{ latest.location }}</span>
+          {% endif %}
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">Zatím není odehraný žádný zápas.</p>
+    {% endif %}
+  </div>
+</section>

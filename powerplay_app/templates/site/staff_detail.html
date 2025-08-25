@@ -1,10 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "site/base.html" %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}{{ member.first_name }} {{ member.last_name }} | Vedení | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
+{% block crumbs %}Domů / <a href="{% url 'site:staff' %}" class="link">Vedení</a> / {{ member.first_name }} {{ member.last_name }}{% endblock %}
+
+{% block content %}
+<section class="player-hero">
+  <div class="container player-hero__inner">
+    <div class="player-hero__media">
+      <img class="player-hero__photo" src="{% if member.photo %}{{ member.photo.url }}{% else %}{% static 'powerplay_app/img/default_player.png' %}{% endif %}" alt="{{ member.first_name }} {{ member.last_name }}" width="240" height="240" />
+    </div>
+    <div class="player-hero__body">
+      <div class="player-hero__top">
+        <h1 class="player-hero__name">{{ member.first_name }} {{ member.last_name }}</h1>
+      </div>
+      <div class="player-hero__meta">
+        <span class="badge">{{ member.role }}</span>
+        {% if member.team %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ member.team.name }}</span>{% endif %}
+      </div>
+      <div class="player-hero__contacts">
+        {% if member.email %}<a class="link" href="mailto:{{ member.email }}">{{ member.email }}</a>{% endif %}
+        {% if member.phone %}
+          {% if member.email %}<span class="dot" aria-hidden="true"></span>{% endif %}
+          <a class="link" href="tel:{{ member.phone|cut:" " }}">{{ member.phone }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section__title">Informace</h2>
+    <div class="info-grid mt-2">
+      <div class="info-row"><span class="info-k">Funkce</span><span class="info-v">{{ member.role }}</span></div>
+      <div class="info-row"><span class="info-k">Tým</span><span class="info-v">{% if member.team %}{{ member.team.name }}{% else %}—{% endif %}</span></div>
+      <div class="info-row"><span class="info-k">Adresa</span><span class="info-v">{% if member.address %}{{ member.address }}{% else %}—{% endif %}</span></div>
+      <div class="info-row"><span class="info-k">Aktivní</span><span class="info-v">{% if member.is_active %}Ano{% else %}Ne{% endif %}</span></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

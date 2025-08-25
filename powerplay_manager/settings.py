@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+from django.urls import reverse_lazy
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,15 +33,26 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+
+
+    "jet",
+    "jet.dashboard",
+    'powerplay_app.apps.PowerplayAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'powerplay_app',
+    "django.contrib.humanize",
+    "nested_admin",
     'django_extensions',
+
 ]
+
+JET_INDEX_DASHBOARD = 'powerplay_app.dashboard.CustomIndexDashboard'
+JET_APP_INDEX_DASHBOARD = 'powerplay_app.dashboard.CustomAppIndexDashboard'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -63,10 +76,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'powerplay_app.context.primary_team',
             ],
         },
     },
 ]
+
+TEMPLATES[0]['DIRS'] += [BASE_DIR / 'powerplay_app' / 'templates']
 
 WSGI_APPLICATION = 'powerplay_manager.wsgi.application'
 
@@ -102,13 +118,18 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# --- AUTH backends: username NEBO e‑mail ---
+AUTHENTICATION_BACKENDS = [
+    "powerplay_app.auth_backends.UsernameOrEmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'cs'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Prague'
 
 USE_I18N = True
 
@@ -119,6 +140,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # 🖼️ Nastavení pro nahrávání obrázků
 MEDIA_URL = '/media/'
@@ -128,3 +150,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --------------------------------------------------
+# 🛠️ Custom project settings
+# --------------------------------------------------
+
+PRIMARY_TEAM_NAME = "BLACKBIRDS"
+
+POWERPLAY_SPONSORS = [
+    {"name": "Acme Tools", "logo": "site/img/sponsors/HOCKEYPROSHOP_logo_2020.png", "url": "https://www.hockeyproshop.cz"},
+
+]
+
+# --- Login/Logout URL + redirecty ---
+LOGIN_URL = reverse_lazy("site:login")
+LOGIN_REDIRECT_URL = "/portal/"     # po přihlášení
+LOGOUT_REDIRECT_URL = "/"           # fallback po odhlášení (kromě next)

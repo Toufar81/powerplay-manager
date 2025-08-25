@@ -1,0 +1,65 @@
+/* file: powerplay_app/static/powerplay_app/admin_lineups.css */
+
+/* --- DVA SLOUPCE: Home vs Away --- */
+/* Grappelli / nested_admin inline block je normálně 100% wide -> přepíšeme */
+#line_col_fix { /* dummy anchor to increase specificity if needed */ }
+
+#game_form .inline-group.line-col-left,
+#game_form .inline-group.line-col-right,
+#grp-content #game_form .inline-group.line-col-left,
+#grp-content #game_form .inline-group.line-col-right {
+  float: left;                 /* ✅ srovnáme vedle sebe */
+  width: 49%;                  /* ✅ dvě poloviny */
+  box-sizing: border-box;
+  clear: none !important;
+}
+
+/* mezera mezi sloupci */
+#game_form .inline-group.line-col-left { margin-right: 2%; }
+#game_form .inline-group.line-col-right { margin-right: 0; }
+
+/* Grappelli obvykle nutí 100% šířku – přetlučeme */
+#game_form .grp-group.inline-group.line_col_width_fix,
+#game_form .grp-group.inline-group.line-col-left,
+#game_form .grp-group.inline-group.line-col-right,
+#grp-content .grp-group.inline-group.line-col-left,
+#grp-content .grp-group.inline-group.line-col-right {
+  width: auto !important;      /* ❗ zrušit pevnou 100% šířku */
+  max-width: none;
+  display: block;              /* block + float řeší layout */
+}
+
+/* Po dvou sloupcích „smeteme“ floaty, aby cíle (Góly/Tresty) začínaly až pod nimi */
+#game_form:after,
+#grp-content #game_form:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+/* Další inline skupiny (3. a dál) přes celou šířku */
+#game_form > .inline-group:nth-of-type(n+3),
+#grp-content #game_form > .inline-group:nth-of-type(n+3) {
+  clear: both;
+  float: none;
+  width: 100%;
+  display: block;
+}
+
+/* --- KOMPAKTNĚJŠÍ TABULKY --- */
+.inline-related.inline-group table { font-size: 12px; }
+.inline-related .form-row { padding: 2px 6px; }
+
+/* Sticky hlavičky pro lepší orientaci při scrollu */
+.inline-group h2 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  padding: 8px 6px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Grappelli drobnosti */
+.grp-group.inline-group { padding: 8px; }
+.grp-group.inline-group .grp-table { font-size: 12px; }

@@ -1,10 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "site/base.html" %}
 
-</body>
-</html>
+{% block title %}{% if league %}{{ league.name }} {{ league.season }} | {% endif %}{% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
+{% block crumbs %}Domů / Liga{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="section__title">{% if league %}{{ league.name }} {{ league.season }}{% else %}Liga{% endif %}</h1>
+    <p class="muted">Skeleton stránky ligy. Později doplníme tabulku, střelce a rozpis.</p>
+
+    <div class="card mt-4">
+      <h2 class="card__title">Tabulka</h2>
+      <p class="muted">Zatím prázdné.</p>
+    </div>
+
+    <div class="card mt-4">
+      <h2 class="card__title">Nejlepší střelci</h2>
+      <p class="muted">Zatím prázdné.</p>
+    </div>
+
+    <div class="card mt-4">
+      <h2 class="card__title">Rozpis</h2>
+      <p class="muted">Zatím prázdné.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

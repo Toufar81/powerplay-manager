@@ -1,10 +1,120 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "portal/base.html" %}
+{% load humanize %}
 
-</body>
-</html>
+{% block title %}Pokladna | Portál{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="section__title">Pokladna</h1>
+
+    <!-- Filtr: období -->
+    <div class="card" style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+      <form method="get" action="" style="display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;">
+        <label>Období:</label>
+
+        <select name="period" id="id_period" style="min-width:110px;">
+          <option value="year" {% if period == 'year' %}selected{% endif %}>Rok</option>
+          <option value="month" {% if period == 'month' %}selected{% endif %}>Měsíc</option>
+        </select>
+
+        <select name="year" id="id_year" style="min-width:90px;">
+          {% for y in year_choices %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="month" id="id_month" style="min-width:130px;" {% if period != 'month' %}disabled{% endif %}>
+          {% for m, label in months %}
+            <option value="{{ m }}" {% if month == m %}selected{% endif %}>{{ label|capfirst }}</option>
+          {% endfor %}
+        </select>
+
+        <button class="btn" type="submit">Filtrovat</button>
+      </form>
+
+      <div class="muted" style="margin-left:auto;">
+        Vybráno: {{ range_from|date:"j. n. Y" }} – {{ range_to|date:"j. n. Y" }}
+      </div>
+    </div>
+
+    <!-- Souhrny -->
+    <div class="card mt-2" style="display:grid;gap:.35rem;">
+      <div><strong>Příjmy (období):</strong> {{ total_in|floatformat:2 }} Kč</div>
+      <div><strong>Výdaje (období):</strong> {{ total_out|floatformat:2 }} Kč</div>
+      <div><strong>Zůstatek (období):</strong> {{ balance|floatformat:2 }} Kč</div>
+      <hr style="border:0;border-top:1px solid var(--c-border);margin:.35rem 0;">
+      <div><strong>Aktuální zůstatek (celkem):</strong> {{ balance_all|floatformat:2 }} Kč</div>
+    </div>
+
+    <!-- TOP kategorie -->
+    <div class="grid grid--2 mt-3">
+      <div class="card">
+        <h3 class="card__title">TOP výdaje podle kategorie</h3>
+        <ul class="clean-list">
+          {% if top_exp %}
+            {% for row in top_exp %}
+              <li style="display:flex; justify-content:space-between; padding:.35rem 0; border-top:1px solid var(--c-border);">
+                <span>{{ row.category__name|default:"—" }}</span>
+                <strong>{{ row.s|floatformat:2 }} Kč</strong>
+              </li>
+            {% endfor %}
+          {% else %}
+            <li class="muted">Žádné výdaje v období.</li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="card">
+        <h3 class="card__title">TOP příjmy podle kategorie</h3>
+        <ul class="clean-list">
+          {% if top_inc %}
+            {% for row in top_inc %}
+              <li style="display:flex; justify-content:space-between; padding:.35rem 0; border-top:1px solid var(--c-border);">
+                <span>{{ row.category__name|default:"—" }}</span>
+                <strong>{{ row.s|floatformat:2 }} Kč</strong>
+              </li>
+            {% endfor %}
+          {% else %}
+            <li class="muted">Žádné příjmy v období.</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Seznam položek -->
+    <div class="card mt-3">
+      <ul class="clean-list">
+        {% for row in tx %}
+          <li style="display:grid;grid-template-columns:140px 1fr 130px;gap:.75rem;padding:.5rem 0;border-top:1px solid var(--c-border);align-items:center;">
+            <div class="muted">{{ row.date|date:"j. n. Y" }}</div>
+            <div>
+              <strong>{% if row.category %}{{ row.category.name }}{% else %}—{% endif %}</strong>
+              {% if row.note %}<span class="muted"> • {{ row.note }}</span>{% endif %}
+            </div>
+            <div style="text-align:right; font-weight:800;">
+              {% if row.kind == 'in' %}+{% else %}−{% endif %}{{ row.amount|floatformat:2 }} Kč
+            </div>
+          </li>
+        {% empty %}
+          <li class="muted">V tomto období nejsou žádné položky.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+
+{% block extra_js %}
+<script>
+  // Povol/zakaž výběr měsíce podle zvoleného "period"
+  (function () {
+    const selPeriod = document.getElementById("id_period");
+    const selMonth = document.getElementById("id_month");
+    function toggleMonth() {
+      selMonth.disabled = selPeriod.value !== "month";
+    }
+    selPeriod.addEventListener("change", toggleMonth);
+    toggleMonth();
+  })();
+</script>
+{% endblock %}
+{% endblock %}

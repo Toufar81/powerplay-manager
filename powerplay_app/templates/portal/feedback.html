@@ -1,10 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "portal/base.html" %}
+{% block title %}Připomínky | Portál{% endblock %}
 
-</body>
-</html>
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="section__title">Připomínky k zápasům / událostem</h1>
+
+    <div class="card mt-2">
+      <form method="post">
+        {% csrf_token %}
+        <div style="display:grid; gap:.6rem; max-width:740px;">
+          <div class="muted">
+            Ve výběru níže jsou události a zápasy pouze z okna
+            <strong>±30 dní</strong> ({{ range_start|date:"j. n. Y" }} – {{ range_end|date:"j. n. Y" }}).
+          </div>
+
+          <label for="{{ form.target.id_for_label }}"><strong>{{ form.target.label }}</strong></label>
+          {{ form.target }}
+
+          <label for="{{ form.subject.id_for_label }}"><strong>Předmět</strong></label>
+          {{ form.subject }}
+
+          <label for="{{ form.message.id_for_label }}"><strong>Připomínka</strong></label>
+          {{ form.message }}
+
+          <div>
+            <button class="btn" type="submit">Odeslat připomínku</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card mt-3">
+      <ul class="clean-list">
+        {% for fb in items %}
+          <li style="border-top:1px solid var(--c-border); padding:.6rem 0;">
+            <div class="muted" style="font-size:.9rem;">
+              {{ fb.created_at|date:"j. n. Y, H:i" }} • {{ fb.created_by_name|default:"uživatel" }}
+            </div>
+            <div style="margin:.2rem 0;">
+              {% if fb.related_event %}
+                <strong>Událost:</strong> {{ fb.related_event.get_event_type_display }} — {{ fb.related_event.title|default:"—" }}
+                {% if fb.related_event.stadium %} • {{ fb.related_event.stadium.name }}{% endif %}
+                ({{ fb.related_event.starts_at|date:"j. n. Y, H:i" }})
+              {% elif fb.related_game %}
+                <strong>Zápas:</strong> {{ fb.related_game.home_team.name }} vs {{ fb.related_game.away_team.name }}
+                {% if fb.related_game.stadium %} • {{ fb.related_game.stadium.name }}{% endif %}
+                ({{ fb.related_game.starts_at|date:"j. n. Y, H:i" }})
+              {% else %}
+                <strong>Bez vazby</strong>
+              {% endif %}
+            </div>
+            {% if fb.subject %}<div><em>{{ fb.subject }}</em></div>{% endif %}
+            <div>{{ fb.message|linebreaksbr }}</div>
+          </li>
+        {% empty %}
+          <li class="muted">Zatím žádné připomínky.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}

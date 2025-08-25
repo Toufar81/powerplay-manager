@@ -1,10 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "portal/base.html" %}
 
-</body>
-</html>
+{% block title %}Účet | Portál{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="container">
+      <h1 class="section__title">Nastavení účtu</h1>
+
+      <div class="card mt-2">
+        <h2 class="card__title">Můj profil</h2>
+        <form method="post" class="mt-2" action="{% url 'portal:account' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="profile" />
+          <div style="display:grid; gap:.6rem; max-width:460px;">
+            {{ profile_form.as_p }}
+            <button class="btn" type="submit">Uložit e‑mail</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card mt-4">
+        <h2 class="card__title">Změna hesla</h2>
+        <form method="post" class="mt-2" action="{% url 'portal:account' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="password" />
+          <div style="display:grid; gap:.6rem; max-width:460px;">
+            {% if password_form.non_field_errors %}
+              <div class="flash__item error">{{ password_form.non_field_errors }}</div>
+            {% endif %}
+            {{ password_form.as_p }}
+            <button class="btn" type="submit">Změnit heslo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

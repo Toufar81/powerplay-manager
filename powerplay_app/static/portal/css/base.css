@@ -1,0 +1,19 @@
+@import url("../../site/css/base.css");
+
+
+/* Portál – akcent (zelený) */
+body.portal {
+--brand: #7ad06d;
+--brand-2: #9ee692;
+}
+
+
+/* Aktivní záložka v portálové navigaci */
+.nav--portal .nav__link.is-active {
+background: rgba(122,208,109,.15);
+color: var(--c-text);
+}
+
+
+/* Oddělovač v nav (jemnější) */
+.nav__sep { opacity:.5; }

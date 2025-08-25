@@ -1,10 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+<nav class="nav">
+  <div class="container nav__inner">
+    <a class="nav__brand" href="{% url 'site:home' %}">{% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %}</a>
+    <ul class="nav__menu">
+      <li><a href="{% url 'site:home' %}">Domů</a></li>
+      <li><a href="{% url 'site:league' %}">Liga</a></li>
+      <li><a href="{% url 'site:players' %}">Hráči</a></li>
+      <li><a href="{% url 'site:staff' %}">Vedení</a></li>
+      <li><a href="{% url 'site:contact' %}">Kontakt</a></li>
+      {% if user.is_authenticated %}
+        <li><a href="{% url 'portal:dashboard' %}">Portál</a></li>
+        <li><a href="{% url 'portal:account' %}">Účet</a></li>
+        <li>
+          <form method="post" action="{% url 'site:logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="link" style="background:none;border:0;padding:0;cursor:pointer;">Odhlásit{% if user.get_username %} {{ user.get_username }}{% endif %}</button>
+          </form>
+        </li>
+      {% else %}
+        <li><a href="{% url 'site:login' %}">Přihlásit</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>

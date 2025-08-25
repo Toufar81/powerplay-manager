@@ -1,0 +1,229 @@
+/* ================================================
+   === PLAYER NOMINATIONS GRID =====================
+================================================= */
+#id_home_nominations.player-grid,
+#id_away_nominations.player-grid,
+#id_home_nominations.player-grid > ul,
+#id_away_nominations.player-grid > ul {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+  margin: 8px 0 4px !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+@media (max-width: 1200px) {
+  #id_home_nominations.player-grid,
+  #id_away_nominations.player-grid,
+  #id_home_nominations.player-grid > ul,
+  #id_away_nominations.player-grid > ul {
+    grid-template-columns: repeat(4, minmax(200px, 1fr)) !important;
+  }
+}
+@media (max-width: 900px) {
+  #id_home_nominations.player-grid,
+  #id_away_nominations.player-grid,
+  #id_home_nominations.player-grid > ul,
+  #id_away_nominations.player-grid > ul {
+    grid-template-columns: repeat(3, minmax(180px, 1fr)) !important;
+  }
+}
+#id_home_nominations.player-grid > li,
+#id_away_nominations.player-grid > li,
+#id_home_nominations.player-grid > ul > li,
+#id_away_nominations.player-grid > ul > li { margin: 0 !important; padding: 0 !important; }
+#id_home_nominations.player-grid label,
+#id_away_nominations.player-grid label {
+  display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 10px !important;
+  padding: 10px 12px !important; min-height: 44px !important; background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important; border-radius: 12px !important; box-sizing: border-box !important; cursor: pointer !important;
+  float: none !important; width: auto !important;
+}
+#id_home_nominations.player-grid label .meta,
+#id_away_nominations.player-grid label .meta { display: flex !important; align-items: baseline !important; gap: 8px !important; min-width: 0 !important; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; }
+#id_home_nominations.player-grid label .num,
+#id_away_nominations.player-grid label .num { font-weight: 800 !important; font-size: 18px !important; opacity: .9 !important; }
+#id_home_nominations.player-grid label .name,
+#id_away_nominations.player-grid label .name { font-weight: 600 !important; }
+#id_home_nominations.player-grid label .nick,
+#id_away_nominations.player-grid label .nick { opacity: .65 !important; margin-left: 4px !important; }
+#id_home_nominations.player-grid label input[type="checkbox"],
+#id_away_nominations.player-grid label input[type="checkbox"] {
+  position: static !important; float: none !important; display: inline-block !important;
+  visibility: visible !important; opacity: 1 !important; transform: scale(1.1); margin: 0 !important; flex: 0 0 auto !important;
+}
+#id_home_nominations.player-grid label:has(input[type="checkbox"]:checked),
+#id_away_nominations.player-grid label:has(input[type="checkbox"]:checked) {
+  border-color: #8ab4f8 !important; box-shadow: 0 0 0 3px rgba(138,180,248,.25) inset !important;
+}
+
+/* ================================================
+   === ADMIN – drobné úpravy ======================
+================================================= */
+fieldset.module.aligned .field-box { float: none !important; margin-right: 0 !important; }
+.form-row.field-score_home > div:last-child,
+.form-row.field-score_away > div:last-child { display: inline-flex !important; align-items: center !important; gap: 8px !important; }
+.form-row.field-score_home > div:last-child > label,
+.form-row.field-score_away > div:last-child > label { float: none !important; margin: 0 6px 0 0 !important; line-height: 1.2 !important; }
+.form-row.field-score_home > div:last-child input,
+.form-row.field-score_away > div:last-child input { margin: 0 !important; vertical-align: middle !important; }
+
+/* ================================================
+   === SESTAVA – vnořené inliny ===================
+================================================= */
+.inline-group .inline-related.nested-inline {
+  background: #fff; border: 1px solid var(--hairline-color, #e5e5e5);
+  border-radius: 12px; padding: 10px 12px; margin: 12px 0;
+}
+
+/* Vnitřní řádek: Post | Hráč | Odstranit? */
+.inline-group .inline-related .inline-related .form-row{
+  display:grid; grid-template-columns:110px minmax(260px,1fr) auto;
+  align-items:center; gap:10px;
+}
+.inline-group .inline-related .inline-related .form-row > label{ margin:0; width:auto; line-height:1.2; }
+.inline-group .inline-related .inline-related .form-row .related-widget-wrapper,
+.inline-group .inline-related .inline-related .form-row select,
+.inline-group .inline-related .inline-related .form-row .select2,
+.inline-group .inline-related .inline-related .form-row .select2-selection--single{
+  display:inline-flex; align-items:center; min-width:260px; width:100%;
+}
+.inline-group .inline-related .inline-related .form-row .delete{ justify-self:end; }
+.inline-group .inline-related .inline-related .form-row + .form-row{
+  border-top:1px dashed rgba(0,0,0,.06); padding-top:8px; margin-top:8px;
+}
+.inline-group .inline-related .add-row{ margin-top:8px; }
+
+/* ================================================
+   === GOALIE blok (line 0) =======================
+================================================= */
+.line-goalie thead th.original,
+.line-goalie thead th.djn-th.cislo-lajny,
+.line-goalie thead th.djn-th.get_slot_label,
+.line-goalie thead th.delete { display:none !important; }
+.line-goalie tbody td.original,
+.line-goalie tbody td.djn-td.field-line_number,
+.line-goalie tbody td.djn-td.field-get_slot_label,
+.line-goalie tbody td.delete { display:none !important; }
+.line-goalie .add-row, .line-goalie .djn-add-handler{ display:none !important; }
+.line-goalie table.djn-items td, .line-goalie table.djn-items th{ vertical-align:middle !important; }
+.line-goalie .grp-dynamic-form{ padding-top:4px !important; padding-bottom:4px !important; }
+
+/* ================================================
+   === SKATERS (fixních 5 postů) ==================
+   – schovej přidání/smazání řádků, nech jen Hráč
+================================================= */
+.line-skaters thead th.original,
+.line-skaters thead th.delete { display:none !important; }
+.line-skaters tbody td.original,
+.line-skaters tbody td.delete { display:none !important; }
+.line-skaters .add-row, .line-skaters .djn-add-handler { display:none !important; }
+
+/* === GOALIE blok (line 0) – hezké karty jako v Nominacích === */
+.line-goalie thead th.original,
+.line-goalie thead th.djn-th.cislo-lajny,
+.line-goalie thead th.djn-th.get_slot_label,
+.line-goalie thead th.delete { display:none !important; }
+
+.line-goalie tbody td.original,
+.line-goalie tbody td.djn-td.field-line_number,
+.line-goalie tbody td.djn-td.field-get_slot_label,
+.line-goalie tbody td.delete { display:none !important; }
+
+/* Každý řádek = „karta“ přes celou šířku */
+.line-goalie tbody .djn-tr.form-row { display:block !important; }
+.line-goalie tbody .djn-tr.form-row > td { display:block !important; border:0 !important; padding:0 !important; }
+.line-goalie tbody .djn-tr.form-row + .djn-tr.form-row { margin-top:10px !important; }
+
+/* Samotné pole hráče */
+.line-goalie tbody td.djn-td.field-player {
+  background:#fff !important;
+  border:1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius:12px !important;
+  padding:10px 12px !important;
+}
+
+/* Select vyplní šířku „karty“ a vypadá civilizovaně */
+.line-goalie .related-widget-wrapper,
+.line-goalie .related-widget-wrapper select,
+.line-goalie .related-widget-wrapper .select2,
+.line-goalie .related-widget-wrapper .select2-selection--single {
+  display:inline-flex !important;
+  align-items:center !important;
+  min-width:260px !important;
+  width:100% !important;
+}
+
+/* Skrýt přidání/smazání */
+.line-goalie .add-row, .line-goalie .djn-add-handler{ display:none !important; }
+.line-goalie table.djn-items td, .line-goalie table.djn-items th{ vertical-align:middle !important; }
+.line-goalie .grp-dynamic-form{ padding-top:4px !important; padding-bottom:4px !important; }
+
+/* Goalie inline – lehké sjednocení spacingu s nominacemi */
+.line-goalie .inline-related .form-row {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.line-goalie .related-widget-wrapper,
+.line-goalie select {
+  display: inline-flex;
+  align-items: center;
+  min-width: 260px;
+  width: 100%;
+}
+/* ================================================
+   === SKATERS – vzhled sjednocený s Goalie/Nominace
+   – zobraz 5 pevných řádků jako „karty“
+================================================= */
+.line-skaters thead th.original,
+.line-skaters thead th.delete { display: none !important; }
+
+.line-skaters tbody td.original,
+.line-skaters tbody td.delete { display: none !important; }
+
+/* Základní rozložení řádku: štítek slotu + select hráče */
+.line-skaters tbody .djn-tr.form-row { display: grid !important; grid-template-columns: 160px minmax(280px, 1fr); gap: 10px; align-items: center; }
+.line-skaters tbody .djn-tr.form-row > td { border: 0 !important; padding: 0 !important; }
+
+/* „Slot label“ jako malý badge */
+.line-skaters tbody td.djn-td.field-slot_label input[readonly] {
+  display: inline-block !important;
+  width: 100% !important;
+  background: #f7f7f7 !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  font-weight: 600 !important;
+}
+
+/* Karta pro select s hráčem */
+.line-skaters tbody td.djn-td.field-player {
+  background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+
+/* Select vyplní šířku karty + Select2 */
+.line-skaters .related-widget-wrapper,
+.line-skaters .related-widget-wrapper select,
+.line-skaters .related-widget-wrapper .select2,
+.line-skaters .related-widget-wrapper .select2-selection--single {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-width: 260px !important;
+  width: 100% !important;
+}
+
+/* Jemné oddělení mezi řádky */
+.line-skaters tbody .djn-tr.form-row + .djn-tr.form-row { margin-top: 10px !important; }
+
+/* Skryj přidávání/mazání řádků (máme fixně 5 postů) */
+.line-skaters .add-row, .line-skaters .djn-add-handler { display: none !important; }
+
+/* Responsivní úpravy */
+@media (max-width: 980px) {
+  .line-skaters tbody .djn-tr.form-row { grid-template-columns: 1fr; }
+}

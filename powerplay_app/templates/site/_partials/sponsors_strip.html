@@ -1,10 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% load static %}
+{% if sponsors %}
+<section class="strip strip--sponsors" aria-label="Partneři a sponzoři">
+  <div class="strip__inner">
+    <div class="strip__tag">Partneři</div>
+    <ul class="sponsors" role="list">
+      {% for s in sponsors %}
+        <li class="sponsors__item">
+          {% if s.url %}<a class="sponsor" href="{{ s.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ s.name }}">{% else %}<span class="sponsor" aria-label="{{ s.name }}">{% endif %}
+            {% if s.logo %}
+              <img class="sponsor__logo" src="{% static s.logo %}" alt="{{ s.name }}" loading="lazy" decoding="async" width="160" height="48" />
+            {% else %}
+              <span class="sponsor__name">{{ s.name }}</span>
+            {% endif %}
+          {% if s.url %}</a>{% else %}</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}

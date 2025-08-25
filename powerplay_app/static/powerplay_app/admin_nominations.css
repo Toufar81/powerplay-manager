@@ -1,0 +1,911 @@
+/* ================================================
+   === PLAYER NOMINATIONS GRID =====================
+================================================= */
+#id_home_nominations.player-grid,
+#id_away_nominations.player-grid,
+#id_home_nominations.player-grid > ul,
+#id_away_nominations.player-grid > ul {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+  margin: 8px 0 4px !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+@media (max-width: 1200px) {
+  #id_home_nominations.player-grid,
+  #id_away_nominations.player-grid,
+  #id_home_nominations.player-grid > ul,
+  #id_away_nominations.player-grid > ul {
+    grid-template-columns: repeat(4, minmax(200px, 1fr)) !important;
+  }
+}
+@media (max-width: 900px) {
+  #id_home_nominations.player-grid,
+  #id_away_nominations.player-grid,
+  #id_home_nominations.player-grid > ul,
+  #id_away_nominations.player-grid > ul {
+    grid-template-columns: repeat(3, minmax(180px, 1fr)) !important;
+  }
+}
+#id_home_nominations.player-grid > li,
+#id_away_nominations.player-grid > li,
+#id_home_nominations.player-grid > ul > li,
+#id_away_nominations.player-grid > ul > li { margin: 0 !important; padding: 0 !important; }
+#id_home_nominations.player-grid label,
+#id_away_nominations.player-grid label {
+  display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 10px !important;
+  padding: 10px 12px !important; min-height: 44px !important; background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important; border-radius: 12px !important; box-sizing: border-box !important; cursor: pointer !important;
+  float: none !important; width: auto !important;
+}
+#id_home_nominations.player-grid label .meta,
+#id_away_nominations.player-grid label .meta { display: flex !important; align-items: baseline !important; gap: 8px !important; min-width: 0 !important; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; }
+#id_home_nominations.player-grid label .num,
+#id_away_nominations.player-grid label .num { font-weight: 800 !important; font-size: 18px !important; opacity: .9 !important; }
+#id_home_nominations.player-grid label .name,
+#id_away_nominations.player-grid label .name { font-weight: 600 !important; }
+#id_home_nominations.player-grid label .nick,
+#id_away_nominations.player-grid label .nick { opacity: .65 !important; margin-left: 4px !important; }
+#id_home_nominations.player-grid label input[type="checkbox"],
+#id_away_nominations.player-grid label input[type="checkbox"] {
+  position: static !important; float: none !important; display: inline-block !important;
+  visibility: visible !important; opacity: 1 !important; transform: scale(1.1); margin: 0 !important; flex: 0 0 auto !important;
+}
+#id_home_nominations.player-grid label:has(input[type="checkbox"]:checked),
+#id_away_nominations.player-grid label:has(input[type="checkbox"]:checked) {
+  border-color: #8ab4f8 !important; box-shadow: 0 0 0 3px rgba(138,180,248,.25) inset !important;
+}
+
+
+/* ================================================
+   === ADMIN – drobné úpravy ======================
+================================================= */
+fieldset.module.aligned .field-box { float: none !important; margin-right: 0 !important; }
+.form-row.field-score_home > div:last-child,
+.form-row.field-score_away > div:last-child { display: inline-flex !important; align-items: center !important; gap: 8px !important; }
+.form-row.field-score_home > div:last-child > label,
+.form-row.field-score_away > div:last-child > label { float: none !important; margin: 0 6px 0 0 !important; line-height: 1.2 !important; }
+.form-row.field-score_home > div:last-child input,
+.form-row.field-score_away > div:last-child input { margin: 0 !important; vertical-align: middle !important; }
+
+
+/* ================================================
+   === GOALIE blok (line 0) =======================
+================================================= */
+.line-goalie thead th.original,
+.line-goalie thead th.djn-th.cislo-lajny,
+.line-goalie thead th.djn-th.get_slot_label,
+.line-goalie thead th.delete { display:none !important; }
+.line-goalie tbody td.original,
+.line-goalie tbody td.djn-td.field-line_number,
+.line-goalie tbody td.djn-td.field-get_slot_label,
+.line-goalie tbody td.delete { display:none !important; }
+
+.line-goalie .add-row, .line-goalie .djn-add-handler{ display:none !important; }
+.line-goalie table.djn-items td, .line-goalie table.djn-items th{ vertical-align:middle !important; }
+.line-goalie .grp-dynamic-form{ padding-top:4px !important; padding-bottom:4px !important; }
+
+.line-goalie tbody .djn-tr.form-row { display:block !important; }
+.line-goalie tbody .djn-tr.form-row > td { display:block !important; border:0 !important; padding:0 !important; }
+.line-goalie tbody .djn-tr.form-row + .djn-tr.form-row { margin-top:10px !important; }
+
+.line-goalie tbody td.djn-td.field-player {
+  background:#fff !important;
+  border:1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius:12px !important;
+  padding:10px 12px !important;
+}
+.line-goalie .related-widget-wrapper,
+.line-goalie .related-widget-wrapper select,
+.line-goalie .related-widget-wrapper .select2,
+.line-goalie .related-widget-wrapper .select2-selection--single {
+  display:inline-flex !important;
+  align-items:center !important;
+  min-width:260px !important;
+  width:100% !important;
+}
+.line-goalie .inline-related .form-row {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+
+/* =========================================================
+   SESTAVY (SKATERS) — 3 dlaždice L1–L3 vedle sebe
+   (Home i Away). Zrušíme „levé prázdné bloky“
+   a ponecháme jen vnitřní tabulku slotů jako kartu.
+========================================================= */
+
+/* 0) Skryj nepotřebné sloupce lajny (original, číslo, delete) – opravdu pryč z layoutu */
+.line-skaters table.djn-items > thead { display: none !important; }
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td.original,
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td.djn-td.field-line_number,
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td.delete {
+  display: none !important;
+}
+
+/* 1) Tělo inline (tbody) jako grid 3 sloupců — každý TR = položka mřížky */
+.line-skaters table.djn-items > tbody {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  justify-content: stretch !important;
+}
+
+/* 2) Samotný řádek lajny – nechte jen obsahový TD (colspan) být „kartou“ */
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row {
+  display: contents !important; /* TR se rozpustí, do gridu jde přímo obsahový TD */
+}
+
+/* 3) Karta lajny = ten široký TD s colspanem */
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td[colspan] {
+  display: block !important;
+  width: 100% !important;
+  background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* 4) Uvnitř karty vypneme zbytečné rámečky fieldsetu a horizontální scroll */
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td[colspan] fieldset.module.djn-fieldset {
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.line-skaters .djn-group,
+.line-skaters .djn-group .module,
+.line-skaters .djn-group .grp-module,
+.line-skaters .djn-group .djn-items {
+  overflow-x: visible !important;
+}
+
+/* 5) Pevných 5 postů uvnitř karty – hezké řádky (štítek + hráč) */
+.line-skaters td[colspan] table.djn-items thead th.original,
+.line-skaters td[colspan] table.djn-items thead th.delete { display: none !important; }
+.line-skaters td[colspan] table.djn-items tbody td.original,
+.line-skaters td[colspan] table.djn-items tbody td.delete { display: none !important; }
+
+.line-skaters td[colspan] table.djn-items > tbody > tr.djn-tr.form-row {
+  display: grid !important;
+  grid-template-columns: 160px minmax(280px, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+.line-skaters td[colspan] table.djn-items > tbody > tr.djn-tr.form-row + tr.djn-tr.form-row {
+  margin-top: 10px !important;
+}
+.line-skaters td[colspan] table.djn-items > tbody > tr.djn-tr.form-row > td {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* slot label (readonly input) */
+.line-skaters td[colspan] table.djn-items tbody td.djn-td.field-slot_label input[readonly]{
+  display:inline-block !important; width:100% !important;
+  background:#f7f7f7 !important; border:1px solid var(--hairline-color,#e5e5e5) !important;
+  border-radius:10px !important; padding:8px 10px !important; font-weight:600 !important;
+}
+
+/* select s hráčem jako „karta“ */
+.line-skaters td[colspan] table.djn-items tbody td.djn-td.field-player{
+  background:#fff !important; border:1px solid var(--hairline-color,#e5e5e5) !important;
+  border-radius:12px !important; padding:10px 12px !important;
+}
+.line-skaters td[colspan] .related-widget-wrapper,
+.line-skaters td[colspan] .related-widget-wrapper select,
+.line-skaters td[colspan] .related-widget-wrapper .select2,
+.line-skaters td[colspan] .related-widget-wrapper .select2-selection--single{
+  display:inline-flex !important; align-items:center !important; min-width:260px !important; width:100% !important;
+}
+
+/* 6) skryj přidávání/mazání slotů – je fixně 5 */
+.line-skaters td[colspan] .add-row,
+.line-skaters td[colspan] .djn-add-handler { display: none !important; }
+
+/* 7) responsivní rozpad 3→2→1 */
+@media (max-width: 1400px){
+  .line-skaters table.djn-items > tbody { grid-template-columns: repeat(2, minmax(320px, 1fr)) !important; }
+}
+@media (max-width: 980px){
+  .line-skaters table.djn-items > tbody { grid-template-columns: 1fr !important; }
+}
+/* =========================================================
+   SESTAVY — 3 tabulky v jednom kontejneru vedle sebe
+   (bez „levých“ prázdných buněk a bez mezery mezi řádky)
+========================================================= */
+
+/* tabulka inline jako kontejner (červený blok) */
+.line-skaters table.djn-items {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* z tbody uděláme mřížku pro 3 „karty“ */
+.line-skaters table.djn-items > tbody {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  justify-content: stretch !important;
+}
+
+/* každý TR „rozpustit“, aby do gridu šel jen obsahový TD (ta vnitřní tabulka lajny) */
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row {
+  display: contents !important;
+  border: 0 !important;
+  padding: 0 !important;
+  height: auto !important;
+}
+
+/* odstranit prázdné levé buňky (číslo lajny/original/delete), ať nezabírají místo */
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td.original,
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td.djn-td.field-line_number,
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td.delete {
+  display: none !important;
+}
+
+/* samotná „karta lajny“ = široký TD s colspanem (žlutý/fialový/… rámeček ve tvém nákresu) */
+.line-skaters table.djn-items > tbody.djn-item.djn-inline-form > tr > td[colspan] {
+  display: flex !important;
+  width: 100px !important;
+  max-width: 100px !important;   /* ⬅️ uprav podle potřeby */
+  margin: 10px 10px !important;     /* ⬅️ centrování v rámci grid sloupce */
+  background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
+}
+
+
+/* v kartě zrušit okraje fieldsetu a horizontální scroll všech vnoření */
+.line-skaters table.djn-items > tbody > tr.djn-tr.form-row > td[colspan] fieldset.module.djn-fieldset {
+  border: 0 !important;
+  padding: 0 !important;
+    margin: 0 !important;
+}
+.line-skaters .djn-group,
+.line-skaters .djn-group .module,
+.line-skaters .djn-group .grp-module,
+.line-skaters .djn-group .djn-items {
+  overflow-x: visible !important;
+}
+
+/* 5 pevných postů uvnitř karty – ponecháme tvé řádkování (štítek + select) */
+.line-skaters td[colspan] table.djn-items thead th.original,
+.line-skaters td[colspan] table.djn-items thead th.delete { display: none !important; }
+.line-skaters td[colspan] table.djn-items tbody td.original,
+.line-skaters td[colspan] table.djn-items tbody td.delete { display: none !important; }
+
+.line-skaters td[colspan] table.djn-items > tbody > tr.djn-tr.form-row {
+  display: grid !important;
+  grid-template-columns: 160px minmax(280px, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+.line-skaters td[colspan] table.djn-items > tbody > tr.djn-tr.form-row + tr.djn-tr.form-row {
+  margin-top: 10px !important;
+}
+.line-skaters td[colspan] table.djn-items > tbody > tr.djn-tr.form-row > td {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* vzhled slot labelu & „karty“ se selectem (beze změny funkce) */
+.line-skaters td[colspan] table.djn-items tbody td.djn-td.field-slot_label input[readonly] {
+  display: inline-block !important; width: 100% !important;
+  background: #f7f7f7 !important; border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 10px !important; padding: 8px 10px !important; font-weight: 600 !important;
+}
+.line-skaters td[colspan] table.djn-items tbody td.djn-td.field-player {
+  background: #fff !important; border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important; padding: 10px 12px !important;
+}
+.line-skaters td[colspan] .related-widget-wrapper,
+.line-skaters td[colspan] .related-widget-wrapper select,
+.line-skaters td[colspan] .related-widget-wrapper .select2,
+.line-skaters td[colspan] .related-widget-wrapper .select2-selection--single {
+  display: inline-flex !important; align-items: center !important; min-width: 260px !important; width: 100% !important;
+}
+.line-skaters td[colspan] .add-row,
+.line-skaters td[colspan] .djn-add-handler { display: none !important; }
+
+/* responsivně 3 → 2 → 1 */
+@media (max-width: 1400px){
+  .line-skaters table.djn-items > tbody { grid-template-columns: repeat(2, minmax(320px, 1fr)) !important; }
+}
+@media (max-width: 980px){
+  .line-skaters table.djn-items > tbody { grid-template-columns: 1fr !important; }
+}
+/* =========================================================
+   SESTAVY (SKATERS) — 3 karty (L1–L3) vedle sebe
+========================================================= */
+
+/* 0) Skryj hlavičku */
+.line-skaters table.djn-items > thead,
+.djn-items > thead .original,
+.djn-items > thead .cislo-lajny,
+.djn-items > thead .delete {
+  display: none !important;
+}
+
+/* 1) Tabulka jako grid kontejner */
+.line-skaters table.djn-items {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+  background: transparent !important;
+}
+
+/* 2) Každý TBODY = karta lajny */
+.line-skaters table.djn-items > tbody.djn-item.djn-inline-form {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* 3) Skryj první řádek v TBODY */
+.line-skaters table.djn-items > tbody.djn-item.djn-inline-form > tr.form-row.has_original {
+  display: none !important;
+}
+
+/* 4) Karta lajny = TD[colspan] */
+.line-skaters table.djn-items > tbody.djn-item.djn-inline-form > tr > td[colspan] {
+  display: flex !important;
+  width: 80% !important;
+  max-width: 450px !important;
+  margin: 20px auto !important;
+  background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important;
+  padding: 10px 10px !important;
+  box-sizing: border-box !important;
+}
+
+
+/* 5) Zruš rámečky uvnitř karty */
+.line-skaters td[colspan] fieldset.module.djn-fieldset {
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.line-skaters .djn-group,
+.line-skaters .djn-items {
+  overflow-x: visible !important;
+}
+
+/* 6) Sloty — každý slot = vlastní TBODY */
+.line-skaters td[colspan] table.djn-items.ui-sortable {
+  display: block !important;
+}
+.line-skaters td[colspan] table.djn-items > thead .original,
+.line-skaters td[colspan] table.djn-items > thead .delete,
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody td.original,
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody td.delete {
+  display: none !important;
+}
+
+/* Každý slot = grid řádek: štítek + select */
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody {
+  display: grid !important;
+  grid-template-columns: 160px minmax(280px, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+  margin-bottom: 12px !important;
+}
+
+/* Skryj TR uvnitř TBODY */
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody > tr.djn-tr {
+  display: contents !important;
+}
+
+/* Styl štítku pozice */
+.line-skaters td[colspan] table.djn-items tbody.djn-tbody td.field-slot_label input[readonly] {
+  display: inline-block !important;
+  width: 100% !important;
+  white-space: normal !important;
+  background: #f7f7f7 !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  font-weight: 600 !important;
+}
+
+/* Styl selectu hráče */
+.line-skaters td[colspan] table.djn-items tbody.djn-tbody td.field-player {
+  background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Select wrapper */
+.line-skaters td[colspan] .related-widget-wrapper,
+.line-skaters td[colspan] .related-widget-wrapper select,
+.line-skaters td[colspan] .related-widget-wrapper .select2,
+.line-skaters td[colspan] .related-widget-wrapper .select2-selection--single {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-width: 260px !important;
+  width: 100% !important;
+}
+
+/* 7) Skryj přidávání/mazání slotů */
+.line-skaters td[colspan] .add-row,
+.line-skaters td[colspan] .djn-add-handler,
+.line-skaters > .add-row,
+.line-skaters table.djn-items > tbody.djn-empty-form {
+  display: none !important;
+}
+
+/* 8) Responsivní přepínání: 3 → 2 → 1 */
+@media (max-width: 1400px) {
+  .line-skaters table.djn-items {
+    grid-template-columns: repeat(2, minmax(320px, 1fr)) !important;
+  }
+}
+@media (max-width: 980px) {
+  .line-skaters table.djn-items {
+    grid-template-columns: 1fr !important;
+  }
+  .line-skaters td[colspan] table.djn-items > tbody.djn-tbody {
+    grid-template-columns: 1fr !important;
+  }
+}
+td.djn-td.field-player {
+  width: 100px !important;
+  background: #f0f0f0; /* testovací barva pro ověření */
+}
+/* =========================================================
+   PATCH: SESTAVY (SKATERS) – oprav ztrácení slotů po uložení
+   Cílíme POUZE na top‑level inline (powerplay_app-line),
+   nikoli na vnořený inline se sloty (powerplay_app-lineassignment)
+========================================================= */
+
+/* grid pro karty lajn – jen top‑level TBODY */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"] {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  justify-content: stretch !important;
+}
+@media (max-width: 1400px){
+  .line-skaters table.djn-items
+  > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]{
+    grid-template-columns: repeat(2, minmax(320px, 1fr)) !important;
+  }
+}
+@media (max-width: 980px){
+  .line-skaters table.djn-items
+  > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* “rozpustit TR” a karta = TD[colspan] – jen top‑level */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row { display: contents !important; }
+
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td[colspan]{
+  display: block !important;
+  width: 100% !important;
+  background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* skryj “levé” buňky jen u lajn (ne u slotů) */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td.original,
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td.djn-td.field-line_number,
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td.delete {
+  display: none !important;
+}
+
+/* skryj “první řádek” (has_original) jen u top‑level lajn */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.form-row.has_original { display: none !important; }
+
+/* výslovně NEskrývej nic uvnitř vnořené tabulky slotů */
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody > tr.djn-tr.form-row.has_original {
+  display: contents !important; /* sloty zůstanou vidět i po uložení */
+}
+/* =========================================================
+   MINI POLISH – jemné vizuální úpravy bez změny funkce
+========================================================= */
+
+/* 0) Zruš debug šířku a šedé pozadí, které platilo globálně */
+td.djn-td.field-player {
+  width: auto !important;
+  background: transparent !important;
+}
+
+/* 1) Karty lajn – jemný stín, trochu větší „dýchání“, stejné rohy */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td[colspan]{
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04) !important;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+
+/* hover na kartě – jen decentní zvýraznění */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td[colspan]:hover{
+  box-shadow: 0 4px 16px rgba(0,0,0,.06) !important;
+  border-color: #d8d8d8 !important;
+}
+
+/* 2) Vnitřní head „HRÁČI V LAJNĚ“ – menší písmo, tlumená barva a mezera */
+.line-skaters td[colspan] fieldset.module.djn-fieldset > h2{
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em !important;
+  color: #6b7280 !important; /* tlumená šedá */
+  margin: 0 0 10px !important;
+}
+
+/* 3) Řádky slotů – sjednocené mezery a stejné rohy */
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody{
+  row-gap: 10px !important;
+}
+.line-skaters td[colspan] table.djn-items tbody td.djn-td.field-slot_label input[readonly]{
+  border-radius: 12px !important;
+  padding: 9px 12px !important;
+}
+.line-skaters td[colspan] table.djn-items tbody td.djn-td.field-player{
+  background: #fff !important;
+  border: 1px solid var(--hairline-color, #e5e5e5) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+
+/* 4) Select2 / nativní select – výška, odsazení, focus kroužek */
+.line-skaters td[colspan] .related-widget-wrapper .select2-selection--single{
+  min-height: 36px !important;
+  padding: 2px 8px !important;
+  border-radius: 10px !important;
+}
+.line-skaters td[colspan] .related-widget-wrapper .select2-selection--single:focus{
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(138,180,248,.25) !important;
+  border-color: #8ab4f8 !important;
+}
+.line-skaters td[colspan] .related-widget-wrapper select{
+  min-height: 36px !important;
+  padding: 6px 8px !important;
+  border-radius: 10px !important;
+}
+
+/* 5) Malé ikonky/šipky ve stejné výšce – zarovnání obsahu selectu */
+.line-skaters td[colspan] .select2-selection__rendered{
+  line-height: 30px !important;
+}
+.line-skaters td[colspan] .select2-selection__arrow{
+  height: 32px !important;
+}
+
+/* 6) Jemnější oddělovač mezi sloty při stacku (1 sloupec) */
+@media (max-width: 980px){
+  .line-skaters td[colspan] table.djn-items > tbody.djn-tbody{
+    padding: 8px 0 !important;
+    border-top: 1px dashed #eee !important;
+  }
+  .line-skaters td[colspan] table.djn-items > tbody.djn-tbody:first-of-type{
+    border-top: 0 !important;
+  }
+}
+
+/* 7) Lepší scrollbar u vodorovných seznamů (když se někde objeví) */
+.line-skaters ::-webkit-scrollbar{
+  height: 8px;
+}
+.line-skaters ::-webkit-scrollbar-thumb{
+  background: #d6d6d6;
+  border-radius: 8px;
+}
+.line-skaters ::-webkit-scrollbar-track{
+  background: transparent;
+}
+/* =========================================================
+   VZHLED – sdílené proměnné a drobnosti
+========================================================= */
+:root{
+  --brand: #8ab4f8;                 /* barva zvýraznění (stejně jako NOMINACE) */
+  --hairline-color: #e5e5e5;
+  --card-bg: #fff;
+  --card-radius: 12px;
+  --slot-radius: 10px;
+  --card-gap: 16px;                 /* 14 → 16 pro trochu víc „vzduchu“ */
+  --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.04);
+}
+
+/* ================================================
+   PLAYER NOMINATIONS GRID (beze změny funkce)
+================================================= */
+#id_home_nominations.player-grid,
+#id_away_nominations.player-grid,
+#id_home_nominations.player-grid > ul,
+#id_away_nominations.player-grid > ul {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+  margin: 8px 0 4px !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+@media (max-width:1200px){
+  #id_home_nominations.player-grid,
+  #id_away_nominations.player-grid,
+  #id_home_nominations.player-grid > ul,
+  #id_away_nominations.player-grid > ul {
+    grid-template-columns: repeat(4, minmax(200px, 1fr)) !important;
+  }
+}
+@media (max-width:900px){
+  #id_home_nominations.player-grid,
+  #id_away_nominations.player-grid,
+  #id_home_nominations.player-grid > ul,
+  #id_away_nominations.player-grid > ul {
+    grid-template-columns: repeat(3, minmax(180px, 1fr)) !important;
+  }
+}
+#id_home_nominations.player-grid > li,
+#id_away_nominations.player-grid > li,
+#id_home_nominations.player-grid > ul > li,
+#id_away_nominations.player-grid > ul > li { margin:0 !important; padding:0 !important; }
+#id_home_nominations.player-grid label,
+#id_away_nominations.player-grid label{
+  display:flex !important; align-items:center !important; justify-content:space-between !important; gap:10px !important;
+  padding:10px 12px !important; min-height:44px !important; background:var(--card-bg) !important;
+  border:1px solid var(--hairline-color) !important; border-radius:var(--card-radius) !important; box-sizing:border-box !important; cursor:pointer !important;
+  float:none !important; width:auto !important; box-shadow:var(--shadow);
+}
+#id_home_nominations.player-grid label .meta,
+#id_away_nominations.player-grid label .meta{ display:flex !important; align-items:baseline !important; gap:8px !important; min-width:0 !important; overflow:hidden !important; white-space:nowrap !important; text-overflow:ellipsis !important; }
+#id_home_nominations.player-grid label .num,
+#id_away_nominations.player-grid label .num{ font-weight:800 !important; font-size:18px !important; opacity:.9 !important; }
+#id_home_nominations.player-grid label .name,
+#id_away_nominations.player-grid label .name{ font-weight:600 !important; }
+#id_home_nominations.player-grid label .nick,
+#id_away_nominations.player-grid label .nick{ opacity:.65 !important; margin-left:4px !important; }
+#id_home_nominations.player-grid label input[type="checkbox"],
+#id_away_nominations.player-grid label input[type="checkbox"]{
+  position:static !important; float:none !important; display:inline-block !important;
+  visibility:visible !important; opacity:1 !important; transform:scale(1.1); margin:0 !important; flex:0 0 auto !important;
+}
+#id_home_nominations.player-grid label:has(input[type="checkbox"]:checked),
+#id_away_nominations.player-grid label:has(input[type="checkbox"]:checked){
+  border-color:var(--brand) !important; box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent) inset, var(--shadow) !important;
+}
+
+/* ================================================
+   ADMIN – drobné úpravy
+================================================= */
+fieldset.module.aligned .field-box{ float:none !important; margin-right:0 !important; }
+.form-row.field-score_home > div:last-child,
+.form-row.field-score_away > div:last-child{ display:inline-flex !important; align-items:center !important; gap:8px !important; }
+.form-row.field-score_home > div:last-child > label,
+.form-row.field-score_away > div:last-child > label{ float:none !important; margin:0 6px 0 0 !important; line-height:1.2 !important; }
+.form-row.field-score_home > div:last-child input,
+.form-row.field-score_away > div:last-child input{ margin:0 !important; vertical-align:middle !important; }
+
+/* ================================================
+   GOALIE (line 0) – beze změny funkce
+================================================= */
+.line-goalie thead th.original,
+.line-goalie thead th.djn-th.cislo-lajny,
+.line-goalie thead th.djn-th.get_slot_label,
+.line-goalie thead th.delete{ display:none !important; }
+.line-goalie tbody td.original,
+.line-goalie tbody td.djn-td.field-line_number,
+.line-goalie tbody td.djn-td.field-get_slot_label,
+.line-goalie tbody td.delete{ display:none !important; }
+.line-goalie .add-row, .line-goalie .djn-add-handler{ display:none !important; }
+.line-goalie table.djn-items td, .line-goalie table.djn-items th{ vertical-align:middle !important; }
+.line-goalie .grp-dynamic-form{ padding-top:4px !important; padding-bottom:4px !important; }
+.line-goalie tbody .djn-tr.form-row{ display:block !important; }
+.line-goalie tbody .djn-tr.form-row > td{ display:block !important; border:0 !important; padding:0 !important; }
+.line-goalie tbody .djn-tr.form-row + .djn-tr.form-row{ margin-top:10px !important; }
+.line-goalie tbody td.djn-td.field-player{
+  background:var(--card-bg) !important; border:1px solid var(--hairline-color) !important;
+  border-radius:var(--card-radius) !important; padding:10px 12px !important; box-shadow:var(--shadow);
+}
+.line-goalie .related-widget-wrapper,
+.line-goalie .related-widget-wrapper select,
+.line-goalie .related-widget-wrapper .select2,
+.line-goalie .related-widget-wrapper .select2-selection--single{
+  display:inline-flex !important; align-items:center !important; min-width:260px !important; width:100% !important;
+}
+.line-goalie .inline-related .form-row{
+  display:grid !important; grid-template-columns:minmax(260px,1fr); align-items:center; gap:10px;
+}
+
+/* =========================================================
+   SESTAVY (SKATERS)
+   – 3 karty linek vedle sebe + PATCH proti „mizení“ slotů
+   (cíleno POUZE na top‑level inline: powerplay_app-line)
+========================================================= */
+
+/* skryj hlavičku tabulky */
+.line-skaters table.djn-items > thead{ display:none !important; }
+
+/* grid pro KARTY LAJEN – pouze top‑level TBODY */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]{
+  display:grid !important;
+  grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
+  gap: var(--card-gap) !important;
+  align-items:start !important;
+  justify-content:stretch !important;
+}
+@media (max-width:1400px){
+  .line-skaters table.djn-items
+  > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]{
+    grid-template-columns: repeat(2, minmax(320px, 1fr)) !important;
+  }
+}
+@media (max-width:980px){
+  .line-skaters table.djn-items
+  > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* „rozpustit“ TR + nechat kartu jen jako TD[colspan] – pouze top‑level */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row{ display:contents !important; }
+
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td[colspan]{
+  display:block !important; width:100% !important;
+  background:var(--card-bg) !important; border:1px solid var(--hairline-color) !important;
+  border-radius:var(--card-radius) !important; padding:12px 14px !important; box-sizing:border-box !important;
+  box-shadow: var(--shadow); transition: box-shadow .15s ease, border-color .15s ease;
+}
+
+/* jemný hover jako u nominací */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td[colspan]:hover{
+  border-color: color-mix(in srgb, var(--hairline-color) 60%, var(--brand) 40%) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06), 0 8px 18px rgba(0,0,0,.05);
+}
+
+/* skryj „levé“ buňky (original/line_number/delete) jen u lajen */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td.original,
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td.djn-td.field-line_number,
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.djn-tr.form-row > td.delete{ display:none !important; }
+
+/* skryj první řádek TBODY (has_original) jen u lajen */
+.line-skaters table.djn-items
+> tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-line"]
+> tr.form-row.has_original{ display:none !important; }
+
+/* DŮLEŽITÉ: uvnitř slotů NESKRÝVAT nic – tím se opravuje „mizení“ po uložení */
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody > tr.djn-tr.form-row.has_original{
+  display:contents !important;
+}
+
+/* ▼ Vzhled vnitřní tabulky slotů (5 pevných řádků) ▼ */
+.line-skaters .djn-group,
+.line-skaters .djn-group .module,
+.line-skaters .djn-group .grp-module,
+.line-skaters .djn-group .djn-items{ overflow-x:visible !important; }
+
+.line-skaters td[colspan] table.djn-items > thead .original,
+.line-skaters td[colspan] table.djn-items > thead .delete,
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody td.original,
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody td.delete{ display:none !important; }
+
+.line-skaters td[colspan] table.djn-items.ui-sortable{ display:block !important; }
+
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody{
+  display:grid !important; grid-template-columns: 160px minmax(280px,1fr) !important;
+  gap:10px !important; align-items:center !important; margin-bottom:12px !important;
+}
+.line-skaters td[colspan] table.djn-items > tbody.djn-tbody > tr.djn-tr{ display:contents !important; }
+
+.line-skaters td[colspan] table.djn-items tbody.djn-tbody td.field-slot_label input[readonly]{
+  display:inline-block !important; width:100% !important;
+  background:#f7f7f7 !important; border:1px solid var(--hairline-color) !important;
+  border-radius:var(--slot-radius) !important; padding:8px 10px !important; font-weight:600 !important;
+}
+
+/* „karta“ se selectem hráče – styling + fokus */
+.line-skaters td[colspan] table.djn-items tbody.djn-tbody td.field-player{
+  background:var(--card-bg) !important; border:1px solid var(--hairline-color) !important;
+  border-radius:var(--card-radius) !important; padding:10px 12px !important;
+  display:flex !important; align-items:center !important; box-shadow: var(--shadow);
+}
+.line-skaters td[colspan] .related-widget-wrapper,
+.line-skaters td[colspan] .related-widget-wrapper select,
+.line-skaters td[colspan] .related-widget-wrapper .select2,
+.line-skaters td[colspan] .related-widget-wrapper .select2-selection--single{
+  display:inline-flex !important; align-items:center !important; min-width:260px !important; width:100% !important;
+}
+.line-skaters td[colspan] .select2-selection--single:focus,
+.line-skaters td[colspan] select:focus{
+  outline:none !important; box-shadow:0 0 0 2px color-mix(in srgb, var(--brand) 35%, transparent) inset !important;
+  border-color: var(--brand) !important;
+}
+
+/* Fix: potřebné pro tvé rozložení – zachovat! */
+td.djn-td.field-player{
+  width:100px !important;             /* musí zůstat kvůli „čárkám“ */
+  background:#f0f0f0 !important;      /* test barva – můžeš změnit nebo odstranit */
+}
+
+/* zakázat přidávání/mazání slotů (je fixně 5) */
+.line-skaters td[colspan] .add-row,
+.line-skaters td[colspan] .djn-add-handler,
+.line-skaters > .add-row,
+.line-skaters table.djn-items > tbody.djn-empty-form{ display:none !important; }
+
+/* jemné sjednocení tabulky jako kontejneru */
+.line-skaters table.djn-items{
+  border-collapse:separate !important; border-spacing:0 !important; width:100% !important; background:transparent !important;
+}
+/* ================================================
+   Góly & Tresty – skryj "original" sloupec,
+   ať nic neodsouvá doprava
+================================================= */
+
+/* cílíme jen na inline sety Goal / Penalty */
+.inline-group table.djn-items > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-goal"] td.original,
+.inline-group table.djn-items > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-goal"] th.original,
+.inline-group table.djn-items > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-penalty"] td.original,
+.inline-group table.djn-items > tbody.djn-item.djn-inline-form[data-inline-model="powerplay_app-penalty"] th.original {
+  display: none !important;
+  width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: normal !important;
+}
+
+/* bezpečnostní pojistka – ať "original" nikdy nenutí nowrap */
+.inline-group .tabular td.original,
+.inline-group .tabular th.original {
+  white-space: normal !important;
+}
