@@ -1,0 +1,40 @@
+{% extends "site/base.html" %}
+{% load static %}
+
+{% block title %}Přihlášení | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
+{% block crumbs %}Domů / Přihlášení{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:520px;">
+    <h1 class="section__title">Přihlášení</h1>
+
+    <form method="post" class="card mt-2" action="{% url 'site:login' %}">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="flash__item flash__item--error">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="info-grid" style="max-width:none;">
+        <div class="info-row">
+          <label class="info-k" for="id_username">Uživatelské jméno nebo e‑mail</label>
+          <div class="info-v">{{ form.username }}</div>
+        </div>
+        <div class="info-row">
+          <label class="info-k" for="id_password">Heslo</label>
+          <div class="info-v">{{ form.password }}</div>
+        </div>
+      </div>
+
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+      <div class="mt-4">
+        <button type="submit" class="btn">Přihlásit se</button>
+        <span class="muted" style="margin-left:.5rem;">Po přihlášení budeš přesměrován na portál.</span>
+      </div>
+
+      <p class="muted" style="margin-top:.35rem;">Nemáš účet? Obrať se na správce týmu (účty zakládá admin).</p>
+    </form>
+  </div>
+</section>
+{% endblock %}
