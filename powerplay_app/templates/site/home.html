@@ -1,37 +1,37 @@
 {% extends "site/base.html" %}
+{% load static %}
 {% load next_game %}
 {% load sponsors %}
 {% load latest_tags %}
 
-
 {% block title %}{% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
 
 {% block content %}
-  <section class="hero">
-    <div class="container">
-      <div class="hero__eyebrow">
-        {% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %}
-      </div>
-      <h1 class="hero__title">Vítej na webu týmu</h1>
-      <p class="hero__meta">Oficiální stránky klubu. Aktuálně pracujeme na nové veřejné části.</p>
+  {% static 'site/img/hero.jpg' as hero_url %}
+  {% static 'site/img/logo.png' as hero_logo %}
+  <link rel="preload" as="image" href="{{ hero_url }}">
 
-      <div class="card mt-4">
-        <h2 class="card__title">DEBUG</h2>
-        <p>primary_team:
-          {% if primary_team %}{{ primary_team.name }} | {{ primary_team.id }} | {{ primary_team.short_name }}{% else %}—{% endif %}
-        </p>
-      </div>
+  <section class="hero hero--photo hero--has-logo full-bleed" style="background-image: url('{{ hero_url }}');">
+  <img class="hero__logo" src="{{ hero_logo }}" alt="" role="presentation" loading="eager" decoding="async" fetchpriority="high" />
+  <div class="container">
+    <div class="hero__content">
+      <div class="hero__eyebrow">{% if primary_team %}{{ primary_team.name }}{% else %}BLACKBIRDS{% endif %}</div>
+      <h1 class="hero__title">Hrajeme nahlas.</h1>
+      <p class="hero__meta">Síla týmu, rychlost hry a všechny informace pro fanoušky i hráče.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  {# ——— Next Game strip ——— #}
+  <div class="container">
+    <div class="card mt-4">
+      <h2 class="card__title">DEBUG</h2>
+      <p>primary_team:
+        {% if primary_team %}{{ primary_team.name }} | {{ primary_team.id }} | {{ primary_team.short_name }}{% else %}—{% endif %}
+      </p>
+    </div>
+  </div>
+
   {% next_game_strip %}
-
-
-  {# ——— Sponsors strip ——— #}
   {% sponsors_strip %}
-
-  {# ___ Poslední zápas ___ #}
   {% latest_match %}
-
 {% endblock %}

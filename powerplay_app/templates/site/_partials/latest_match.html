@@ -1,42 +1,50 @@
-<section class="section section--latest-match" aria-label="Poslední zápas">
+{% load static %}
+<section class="strip strip--next-game" aria-label="Poslední zápas">
   <div class="container">
-    <header class="section__head">
-      <h2 class="section__title">Poslední zápas</h2>
-    </header>
+    <div class="ngrid">
+      <div class="strip__title">POSLEDNÍ <span>MATCH</span></div>
 
-    {% if latest %}
-      <article class="match-card" role="article">
-        <div class="match-card__row">
-          <div class="match-card__team match-card__team--us">
-            <div class="match-card__name">{{ primary_team.name }}</div>
-            <div class="match-card__score">{{ latest.score_us }}</div>
-          </div>
-          <div class="match-card__vs">—</div>
-          <div class="match-card__team match-card__team--them">
-            <div class="match-card__name">{{ latest.opponent }}</div>
-            <div class="match-card__score">{{ latest.score_them }}</div>
+      {% if latest %}
+        <!-- HOME vlevo -->
+        <div class="team-card team-card--left {% if home.is_us %}is-us{% endif %}">
+          <div class="team-card__inner">
+            {% if home.logo_url %}
+              <img class="team-card__logo" src="{{ home.logo_url }}" alt="" loading="eager" decoding="async" />
+            {% endif %}
+            <div class="team-card__text">
+              <div class="team-card__name">{{ home.name }}</div>
+              {% if home.region %}<div class="team-card__meta">{{ home.region }}</div>{% endif %}
+            </div>
           </div>
         </div>
-        <div class="match-card__meta">
-          <span class="badge badge--primary">{{ latest.result }}</span>
-          <span class="match-card__dot" aria-hidden="true">•</span>
-          <time datetime="{{ latest.datetime|date:'c' }}">{{ latest.datetime|date:'D j. n. Y' }}</time>
-          {% if latest.league %}
-            <span class="match-card__dot" aria-hidden="true">•</span>
-            <span>{{ latest.league }}</span>
-          {% endif %}
-          {% if latest.venue %}
-            <span class="match-card__dot" aria-hidden="true">•</span>
-            <span>{{ latest.venue }}</span>
-          {% endif %}
-          {% if latest.location %}
-            <span class="match-card__dot" aria-hidden="true">•</span>
-            <span>{{ latest.location }}</span>
-          {% endif %}
+
+        <!-- střed (datum + SKÓRE) -->
+        <div class="midcol">
+          <div class="midcol__date">{{ latest.datetime|date:'j. n. Y' }}</div>
+          <div class="midcol__time">{{ latest.score_home }} : {{ latest.score_away }}</div>
+          <div class="midcol__meta">
+            {{ latest.result }}
+            {% if latest.league %} • {{ latest.league }}{% endif %}
+            {% if latest.venue %} • {{ latest.venue }}{% endif %}
+            {% if latest.location %} • {{ latest.location }}{% endif %}
+          </div>
         </div>
-      </article>
-    {% else %}
-      <p class="muted">Zatím není odehraný žádný zápas.</p>
-    {% endif %}
+
+        <!-- AWAY vpravo -->
+        <div class="team-card team-card--right {% if away.is_us %}is-us{% endif %}">
+          <div class="team-card__inner">
+            <div class="team-card__text team-card__text--right">
+              <div class="team-card__name">{{ away.name }}</div>
+              {% if away.region %}<div class="team-card__meta">{{ away.region }}</div>{% endif %}
+            </div>
+            {% if away.logo_url %}
+              <img class="team-card__logo" src="{{ away.logo_url }}" alt="" loading="eager" decoding="async" />
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="strip__empty">Zatím není odehraný žádný zápas.</div>
+      {% endif %}
+    </div>
   </div>
 </section>

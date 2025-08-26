@@ -1,33 +1,17 @@
 # file: powerplay_app/templatetags/latest_match.py
-"""Template tags for rendering the latest non-future match of the primary team.
+"""Template tag: Poslední zápas (HOME vlevo, AWAY vpravo, shodný layout jako Next Game).
 
-Provides two pieces:
-
-- :class:`LatestMatchVM` – an immutable view model used by the partial template
-  to render opponent, datetime, home/away, score, result (Czech label), and
-  optional competition/venue/city.
-- ``{% latest_match %}`` inclusion tag – expects ``primary_team`` in the
-  template context and supplies ``latest`` (``LatestMatchVM | None``) along with
-  ``primary_team``. It selects the most recent :class:`~powerplay_app.models.games.Game`
-  whose ``starts_at`` is not in the future and where the team appears as either
-  home or away; related objects are prefetched via ``select_related``.
-
-Usage::
-
+Použití v šabloně:
     {% load latest_match %}
     {% latest_match %}
 
-Requirements:
-    ``primary_team`` must be present in the template context (see
-    ``powerplay_app.context.primary_team`` context processor). UI labels remain
-    Czech; internal documentation is English. Behavior is unchanged.
+Vyžaduje `primary_team` v kontextu (viz context processor).
 """
-
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final, Literal, Optional, Any
+from typing import Any, Optional
 
 from django import template
 from django.db.models import Q
@@ -39,42 +23,22 @@ register = template.Library()
 
 
 @dataclass(frozen=True)
-class LatestMatchVM:
-    """Immutable view model for the latest finished match widget.
+class LatestVM:
+    """Meta pro střední sloupec (datum, skóre, doplňková meta)."""
 
-    Attributes:
-        opponent: Opponent team name (Czech in UI).
-        datetime: Match start datetime (timezone-aware).
-        home_away: Literal flag indicating whether the primary team was home or away.
-        score_us: Goals scored by the primary team.
-        score_them: Goals conceded by the primary team.
-        result: Czech label: "Výhra" | "Prohra" | "Remíza".
-        league: Optional competition label (e.g., "NHL 2025/2026" or tournament name).
-        venue: Optional venue name.
-        location: Optional city (home team's city).
-    """
-
-    opponent: str
     datetime: datetime
-    home_away: Literal["home", "away"]
-    score_us: int
-    score_them: int
-    result: str
-    league: Optional[str] = None
+    score_home: int
+    score_away: int
+    result: str  # "Výhra" | "Prohra" | "Remíza" (z pohledu primary_team)
     venue: Optional[str] = None
-    location: Optional[str] = None
+    location: Optional[str] = None  # město HOME týmu
+    league: Optional[str] = None
+    is_home: bool = False  # hrál primary_team doma?
 
 
-# Fixed Czech result labels for UI output.
-_DEF_RESULT_LABELS: Final[dict[str, str]] = {
-    "win": "Výhra",
-    "loss": "Prohra",
-    "draw": "Remíza",
-}
-
+# ---- helpers ---------------------------------------------------------------
 
 def _league_label(g: Game) -> Optional[str]:
-    """Return a Czech label describing the competition for the given game."""
     if g.competition == GameCompetition.LEAGUE and g.league:
         return str(g.league)
     if g.competition == GameCompetition.TOURNAMENT and g.tournament:
@@ -85,11 +49,6 @@ def _league_label(g: Game) -> Optional[str]:
 
 
 def _venue(g: Game) -> Optional[str]:
-    """Return the venue name.
-
-    Prefers the game's explicit stadium; falls back to the home team's stadium
-    name if available.
-    """
     if g.stadium:
         return g.stadium.name
     home_stadium = getattr(getattr(g, "home_team", None), "stadium", None)
@@ -97,24 +56,53 @@ def _venue(g: Game) -> Optional[str]:
 
 
 def _city(g: Game) -> Optional[str]:
-    """Return the home team's city when available."""
     return getattr(g.home_team, "city", None) or None
+
+
+def _team_logo_url(team: Any) -> Optional[str]:
+    if not team:
+        return None
+    # string url
+    val = getattr(team, "logo_url", None)
+    if isinstance(val, str) and val.strip():
+        return val
+    # ImageField
+    img = getattr(team, "logo", None)
+    if img is not None:
+        try:
+            url = img.url  # type: ignore[attr-defined]
+            if isinstance(url, str) and url.strip():
+                return url
+        except Exception:
+            pass
+    # běžné aliasy
+    for attr in ("emblem", "badge"):
+        img2 = getattr(team, attr, None)
+        if img2 is not None:
+            try:
+                url2 = img2.url  # type: ignore[attr-defined]
+                if isinstance(url2, str) and url2.strip():
+                    return url2
+            except Exception:
+                pass
+    return None
+
+
+def _team_region(team: Any) -> Optional[str]:
+    return (
+        getattr(team, "city", None)
+        or getattr(team, "location", None)
+        or getattr(team, "short_name", None)
+        or None
+    )
 
 
 @register.inclusion_tag("site/_partials/latest_match.html", takes_context=True)
 def latest_match(context: dict[str, Any]) -> dict[str, Any]:
-    """Render context for the latest finished match of the primary team.
+    """Vrátí kontext pro POSLEDNÍ odehraný zápas (starts_at <= now).
 
-    Looks up the most recent game (``starts_at`` <= ``now``) involving the
-    primary team and returns a view model for display. If no game is found or
-    the team is missing, returns ``latest=None``.
-
-    Args:
-        context: Template context containing ``primary_team``.
-
-    Returns:
-        Context with keys ``latest`` (``LatestMatchVM | None``) and
-        ``primary_team`` for the partial template.
+    Vlevo se vždy vykresluje HOME tým, vpravo AWAY tým. Střed = datum + skóre.
+    `result` je z pohledu `primary_team` (Výhra/Prohra/Remíza).
     """
     primary_team = context.get("primary_team")
     if not primary_team:
@@ -131,27 +119,50 @@ def latest_match(context: dict[str, Any]) -> dict[str, Any]:
     if not g:
         return {"latest": None, "primary_team": primary_team}
 
-    is_home = g.home_team_id == primary_team.id
-    us = g.score_home if is_home else g.score_away
-    them = g.score_away if is_home else g.score_home
+    is_home = g.home_team_id == getattr(primary_team, "id", None)
 
+    # skóre ve směru HOME–AWAY (pro střední sloupec) + výsledek z pohledu primary
+    s_home = int(g.score_home or 0)
+    s_away = int(g.score_away or 0)
+    us = s_home if is_home else s_away
+    them = s_away if is_home else s_home
     if us > them:
-        result = _DEF_RESULT_LABELS["win"]
+        result = "Výhra"
     elif us < them:
-        result = _DEF_RESULT_LABELS["loss"]
+        result = "Prohra"
     else:
-        result = _DEF_RESULT_LABELS["draw"]
+        result = "Remíza"
 
-    vm = LatestMatchVM(
-        opponent=(g.away_team.name if is_home else g.home_team.name),
+    vm = LatestVM(
         datetime=g.starts_at,
-        home_away=("home" if is_home else "away"),
-        score_us=us,
-        score_them=them,
+        score_home=s_home,
+        score_away=s_away,
         result=result,
-        league=_league_label(g),
         venue=_venue(g),
         location=_city(g),
+        league=_league_label(g),
+        is_home=is_home,
     )
 
-    return {"latest": vm, "primary_team": primary_team}
+    home_t = g.home_team
+    away_t = g.away_team
+
+    home = {
+        "name": str(home_t.name),
+        "region": _team_region(home_t),
+        "logo_url": _team_logo_url(home_t),
+        "is_us": is_home,
+    }
+    away = {
+        "name": str(away_t.name),
+        "region": _team_region(away_t),
+        "logo_url": _team_logo_url(away_t),
+        "is_us": not is_home,
+    }
+
+    return {
+        "latest": vm,
+        "primary_team": primary_team,
+        "home": home,
+        "away": away,
+    }

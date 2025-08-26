@@ -1,30 +1,25 @@
-# file: powerplay_app/templatetags/next_game_strip.py
-"""Template tag for rendering the next scheduled game of the primary team.
+# file: powerplay_app/templatetags/next_game.py
+"""Template tag for rendering the next scheduled game (HOME left, AWAY right).
 
-Internal documentation is in English; all user-facing strings remain Czech.
-Behavior preserved: only Google-style docstrings, type hints, and light
-formatting added.
+Public strings remain Czech; code comments/helpers in English.
 
-Usage:
-    {% load next_game_strip %}
+Usage in templates:
+    {% load next_game %}
     {% next_game_strip %}
 
-Context:
-    Requires ``primary_team`` in the template context. See
-    ``powerplay_app.context.primary_team`` context processor.
+Requires ``primary_team`` in context (provided by a context processor).
 """
-
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final, Literal, Optional, Any
+from typing import Any, Optional
 
 from django import template
 from django.db.models import Q
 from django.utils import timezone
 
-# Import explicitly from modules to avoid relying on models/__init__ exports
+# Explicit import to avoid relying on packages' __init__ exports
 from powerplay_app.models.games import Game, GameCompetition
 
 register = template.Library()
@@ -32,42 +27,21 @@ register = template.Library()
 
 @dataclass(frozen=True)
 class NextGameVM:
-    """Immutable view model for the **next** game widget.
+    """Meta for the center column of the banner."""
 
-    Attributes:
-        opponent: Opponent team name (Czech in UI).
-        datetime: Match start datetime (timezone-aware).
-        home_away: Literal flag indicating whether we play at home or away.
-        venue: Optional venue name.
-        location: Optional city (home team's city).
-        league: Optional competition label.
-        round_label: Optional round/phase label (not populated yet).
-        stream_url: Optional streaming link (placeholder for future schema).
-        tickets_url: Optional ticketing link (placeholder for future schema).
-    """
-
-    opponent: str
     datetime: datetime
-    home_away: Literal["home", "away"]
     venue: Optional[str] = None
-    location: Optional[str] = None
+    location: Optional[str] = None  # home team city
     league: Optional[str] = None
     round_label: Optional[str] = None
     stream_url: Optional[str] = None
     tickets_url: Optional[str] = None
+    is_home: bool = False  # whether *primary_team* plays at home
 
-    @property
-    def is_home(self) -> bool:
-        """Return ``True`` if the primary team is the home team."""
-        return self.home_away == "home"
 
+# ---- helpers ---------------------------------------------------------------
 
 def _format_league_label(game: Game) -> Optional[str]:
-    """Return a Czech label for the game's competition.
-
-    Prefers concrete league/tournament names; falls back to a human-friendly
-    type when it's a friendly game.
-    """
     if game.competition == GameCompetition.LEAGUE and game.league:
         return str(game.league)
     if game.competition == GameCompetition.TOURNAMENT and game.tournament:
@@ -78,36 +52,60 @@ def _format_league_label(game: Game) -> Optional[str]:
 
 
 def _venue_name(game: Game) -> Optional[str]:
-    """Return the venue name.
-
-    Prefers the explicit stadium field; otherwise falls back to the home
-    team's stadium name when available.
-    """
     if game.stadium:
         return game.stadium.name
     home_stadium = getattr(getattr(game, "home_team", None), "stadium", None)
     return getattr(home_stadium, "name", None)
 
 
-def _location_city(game: Game) -> Optional[str]:
-    """Return the home team's city when available."""
+def _home_city(game: Game) -> Optional[str]:
     return getattr(game.home_team, "city", None) or None
+
+
+def _team_logo_url(team: Any) -> Optional[str]:
+    """Resolve team logo URL from common fields; be defensive."""
+    if not team:
+        return None
+    # direct string field
+    val = getattr(team, "logo_url", None)
+    if isinstance(val, str) and val.strip():
+        return val
+    # ImageField-like (may raise when storage is misconfigured, be safe)
+    img = getattr(team, "logo", None)
+    if img is not None:
+        try:
+            url = img.url  # type: ignore[attr-defined]
+            if isinstance(url, str) and url.strip():
+                return url
+        except Exception:
+            pass
+    # Common aliases just in case
+    for attr in ("emblem", "badge"):
+        img2 = getattr(team, attr, None)
+        if img2 is not None:
+            try:
+                url2 = img2.url  # type: ignore[attr-defined]
+                if isinstance(url2, str) and url2.strip():
+                    return url2
+            except Exception:
+                pass
+    return None
+
+
+def _team_region(team: Any) -> Optional[str]:
+    return (
+        getattr(team, "city", None)
+        or getattr(team, "location", None)
+        or getattr(team, "short_name", None)
+        or None
+    )
 
 
 @register.inclusion_tag("site/_partials/next_game_strip.html", takes_context=True)
 def next_game_strip(context: dict[str, Any]) -> dict[str, Any]:
-    """Provide context for the next scheduled game of the primary team.
+    """Return context for the next scheduled game of the primary team.
 
-    Searches for the nearest future ``Game`` (``starts_at >= now``) where the
-    primary team is either home or away. If none exists or ``primary_team`` is
-    missing, the ``next_game`` key is set to ``None``.
-
-    Args:
-        context: Template context containing ``primary_team`` (Team or ``None``).
-
-    Returns:
-        dict[str, Any]: Context for ``site/_partials/next_game_strip.html`` with
-        keys ``next_game`` (``NextGameVM | None``) and ``primary_team``.
+    LEFT is always HOME team, RIGHT is always AWAY team.
     """
     primary_team = context.get("primary_team")
     now = timezone.now()
@@ -125,19 +123,38 @@ def next_game_strip(context: dict[str, Any]) -> dict[str, Any]:
     if not game:
         return {"next_game": None, "primary_team": primary_team}
 
-    is_home = game.home_team_id == primary_team.id
-    opponent = game.away_team.name if is_home else game.home_team.name
+    is_home = game.home_team_id == getattr(primary_team, "id", None)
 
     vm = NextGameVM(
-        opponent=opponent,
         datetime=game.starts_at,
-        home_away="home" if is_home else "away",
         venue=_venue_name(game),
-        location=_location_city(game),
+        location=_home_city(game),
         league=_format_league_label(game),
-        round_label=None,  # not in the model yet; can be added later
-        stream_url=None,   # placeholders for future schema
+        round_label=None,
+        stream_url=None,
         tickets_url=None,
+        is_home=is_home,
     )
 
-    return {"next_game": vm, "primary_team": primary_team}
+    home_team = game.home_team
+    away_team = game.away_team
+
+    home = {
+        "name": str(home_team.name),
+        "region": _team_region(home_team),
+        "logo_url": _team_logo_url(home_team),
+        "is_us": is_home,
+    }
+    away = {
+        "name": str(away_team.name),
+        "region": _team_region(away_team),
+        "logo_url": _team_logo_url(away_team),
+        "is_us": not is_home,
+    }
+
+    return {
+        "next_game": vm,
+        "primary_team": primary_team,
+        "home": home,
+        "away": away,
+    }

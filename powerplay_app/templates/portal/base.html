@@ -2,67 +2,41 @@
 {% load static %}
 <html lang="cs">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{% block title %}Portál hráče{% endblock %}</title>
-<link rel="stylesheet" href="{% static 'site/css/base.css' %}">
-<link rel="stylesheet" href="{% static 'portal/css/base.css' %}">
-{% block extra_css %}{% endblock %}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Oficiální web týmu{% endblock %}" />
+  <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
+  <!-- Oswald (nadpisy) – stejné jako Site -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Portál akcent a drobné overrides -->
+  <link rel="stylesheet" href="{% static 'portal/css/base.css' %}">
+  {% block extra_css %}{% endblock %}
 </head>
-<body class="site portal">
-<nav class="nav nav--portal">
-<div class="container nav__inner">
-<a class="brand" href="{% url 'portal:dashboard' %}">
-<span class="brand__dot" aria-hidden="true"></span>
-{% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %} — Portál
-</a>
-<ul class="nav__menu">
-<!-- Veřejné (site) odkazy -->
-<li class="nav__item"><a class="nav__link" href="{% url 'site:home' %}">Domů</a></li>
-<li class="nav__item"><a class="nav__link" href="{% url 'site:league' %}">Liga</a></li>
-<li class="nav__item"><a class="nav__link" href="{% url 'site:players' %}">Hráči</a></li>
-<li class="nav__item"><a class="nav__link" href="{% url 'site:staff' %}">Vedení</a></li>
-<li class="nav__item"><a class="nav__link" href="{% url 'site:contact' %}">Kontakt</a></li>
-<li class="nav__sep">|</li>
-<!-- Portál odkazy -->
-<li class="nav__item"><a class="nav__link{% if current == 'dashboard' %} is-active{% endif %}" href="{% url 'portal:dashboard' %}">Dashboard</a></li>
-<li class="nav__item"><a class="nav__link{% if current == 'calendar' %} is-active{% endif %}" href="{% url 'portal:calendar' %}">Kalendář</a></li>
-<li class="nav__item"><a class="nav__link{% if current == 'wallet' %} is-active{% endif %}" href="{% url 'portal:wallet' %}">Pokladna</a></li>
-<li class="nav__item"><a class="nav__link{% if current == 'feedback' %} is-active{% endif %}" href="{% url 'portal:feedback' %}">Připomínky</a></li>
-<li class="nav__item"><a class="nav__link{% if current == 'account' %} is-active{% endif %}" href="{% url 'portal:account' %}">Účet</a></li>
-</ul>
-<div class="nav__auth">
-<form method="post" action="{% url 'site:logout' %}" class="auth--logout">
-{% csrf_token %}
-<button type="submit" class="auth__btn">Odhlásit</button>
-</form>
-</div>
-</div>
-</nav>
+<body class="portal">
+  {% include "portal/_partials/nav.html" %}
 
+  <main class="container">
+    {% if messages %}
+      <div class="flash">
+        {% for message in messages %}
+          <div class="flash__item flash__item--{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-{% if messages %}
-<div class="flash" aria-live="polite" style="margin:1rem auto; max-width:640px;">
-{% for message in messages %}
-<div class="flash__item {{ message.tags|default:'info' }}">
-{{ message }}
-</div>
-{% endfor %}
-</div>
-{% endif %}
+    {% block content %}{% endblock %}
+  </main>
 
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__left">&copy; {{ now|date:"Y" }} {% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %}</div>
+      <div class="footer__right">{% block footer_right %}{% endblock %}</div>
+    </div>
+  </footer>
 
-<main class="container">
-{% block content %}{% endblock %}
-</main>
-
-
-<footer class="footer">
-<div class="container footer__inner">
-<div class="footer__left">Portál • {% if primary_team %}{{ primary_team.name }}{% else %}PowerPlay{% endif %}</div>
-<div class="footer__right">Dashboard</div>
-</div>
-</footer>
-{% block extra_js %}{% endblock %}
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,44 +1,49 @@
 {% load static %}
 <section class="strip strip--next-game" aria-label="Nejbližší zápas">
-  <div class="strip__inner">
-    <div class="strip__tag">Nejbližší zápas</div>
+  <div class="strip__inner ngrid">
+    <h2 class="strip__title" aria-hidden="true">NEJBLÍŽŠÍ <span>MATCH</span></h2>
 
     {% if next_game %}
-      <div class="strip__teams">
-        <span class="strip__team strip__team--us">{{ primary_team.name|default:"Blackbirds" }}</span>
-        <span class="strip__vs">vs</span>
-        <span class="strip__team strip__team--opponent">{{ next_game.opponent }}</span>
+      {# ==== LEFT: HOME TEAM ==== #}
+      <div class="team-card team-card--left {% if home.is_us %}is-us{% endif %}">
+        <div class="team-card__inner">
+          {% if home.logo_url %}
+            <img class="team-card__logo" src="{{ home.logo_url }}" alt="" loading="lazy" decoding="async" width="72" height="72" />
+          {% endif %}
+          <div class="team-card__text">
+            <div class="team-card__name">{{ home.name }}</div>
+            {% if home.region %}<div class="team-card__meta">{{ home.region }}</div>{% endif %}
+          </div>
+        </div>
       </div>
 
-      <div class="strip__meta">
-        <time datetime="{{ next_game.datetime|date:'c' }}" title="{{ next_game.datetime|date:'j. n. Y, H:i' }}">
-          {{ next_game.datetime|date:'D j. n. Y' }} • {{ next_game.datetime|date:'H:i' }}
-        </time>
-        {% if next_game.venue %}
-          <span class="strip__dot" aria-hidden="true">•</span>
-          <span class="strip__venue">{{ next_game.venue }}</span>
-        {% endif %}
-        {% if next_game.location %}
-          <span class="strip__dot" aria-hidden="true">•</span>
-          <span class="strip__location">{{ next_game.location }}</span>
-        {% endif %}
-        {% if next_game.league %}
-          <span class="strip__dot" aria-hidden="true">•</span>
-          <span class="strip__league">{{ next_game.league }}</span>
-        {% endif %}
-        {% if next_game.round_label %}
-          <span class="strip__dot" aria-hidden="true">•</span>
-          <span class="strip__round">{{ next_game.round_label }}</span>
-        {% endif %}
+      {# ==== CENTER: DATE/TIME + META ==== #}
+      <div class="midcol">
+        <div class="midcol__date">{{ next_game.datetime|date:'j. n. Y' }}</div>
+        <div class="midcol__time">{{ next_game.datetime|date:'H:i' }}</div>
+        <div class="midcol__meta">
+          {% if next_game.venue %}<span>{{ next_game.venue }}</span>{% endif %}
+          {% if next_game.location %}{% if next_game.venue %} · {% endif %}<span>{{ next_game.location }}</span>{% endif %}
+          {% if next_game.league %} · <span>{{ next_game.league }}</span>{% endif %}
+          {% if next_game.round_label %} · <span>{{ next_game.round_label }}</span>{% endif %}
+        </div>
+        <div class="strip__icons">
+          {% if next_game.tickets_url %}<a class="strip__iconlink" href="{{ next_game.tickets_url }}" aria-label="Vstupenky">🎟️</a>{% endif %}
+          {% if next_game.stream_url %}<a class="strip__iconlink" href="{{ next_game.stream_url }}" aria-label="Stream">📺</a>{% endif %}
+        </div>
       </div>
 
-      <div class="strip__cta">
-        {% if next_game.tickets_url %}
-          <a class="strip__link" href="{{ next_game.tickets_url }}">Vstupenky</a>
-        {% endif %}
-        {% if next_game.stream_url %}
-          <a class="strip__link" href="{{ next_game.stream_url }}">Stream</a>
-        {% endif %}
+      {# ==== RIGHT: AWAY TEAM ==== #}
+      <div class="team-card team-card--right {% if away.is_us %}is-us{% endif %}">
+        <div class="team-card__inner">
+          <div class="team-card__text team-card__text--right">
+            <div class="team-card__name">{{ away.name }}</div>
+            {% if away.region %}<div class="team-card__meta">{{ away.region }}</div>{% endif %}
+          </div>
+          {% if away.logo_url %}
+            <img class="team-card__logo" src="{{ away.logo_url }}" alt="" loading="lazy" decoding="async" width="72" height="72" />
+          {% endif %}
+        </div>
       </div>
     {% else %}
       <div class="strip__empty">Žádný naplánovaný zápas.</div>

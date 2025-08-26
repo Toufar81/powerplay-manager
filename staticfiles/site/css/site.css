@@ -1,0 +1,63 @@
+/* Next Game strip — compact, responsive banner.  */
+.strip { --_pad: .75rem; }
+.strip--next-game {
+  background: var(--c-primary);
+  color: #000; /* high contrast over team yellow */
+}
+.strip--next-game .strip__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .5rem 1rem;
+  align-items: center;
+  padding: var(--_pad) clamp(.75rem, 3vw, 1.25rem);
+}
+.strip--next-game .strip__tag {
+  grid-column: 1 / -1;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  opacity: .9;
+}
+.strip--next-game .strip__teams {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .5rem;
+  font-size: clamp(1rem, 2.8vw, 1.35rem);
+  font-weight: 800;
+}
+.strip--next-game .strip__vs { opacity: .8; }
+.strip--next-game .strip__team--us { color: #000; }
+.strip--next-game .strip__team--opponent { color: #111; }
+
+.strip--next-game .strip__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .6rem;
+  font-size: .9rem;
+  opacity: .95;
+}
+.strip--next-game .strip__dot { opacity: .6; }
+
+.strip--next-game .strip__cta {
+  display: flex;
+  gap: .5rem;
+}
+.strip--next-game .strip__link {
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  padding: .45rem .7rem;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.strip--next-game .strip__link:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+
+@media (max-width: 720px) {
+  .strip--next-game .strip__inner { grid-template-columns: 1fr; }
+  .strip--next-game .strip__cta { grid-row: 3; }
+}
