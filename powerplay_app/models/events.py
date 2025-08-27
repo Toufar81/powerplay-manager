@@ -14,16 +14,8 @@ This module defines domain objects that capture what happens during a match:
 
 - **Concrete events**
   - :class:`Goal` – a goal with a scorer, up to two assists, and a
-    :class:`Strength` value. Validation requires all involved players to belong
-    to the scoring team and to be nominated for the game via
-    :class:`powerplay_app.models.games.GameNomination`. Assists must not
-    duplicate the scorer or each other.
+    :class:`Strength` value.
   - :class:`Penalty` – a penalty referencing the offending player, duration, and type.
-    Validation requires the player to belong to the penalized team and to be
-    nominated for the game.
-
-UI labels (``verbose_name`` etc.) are in Czech; internal documentation is in English.
-The module only applies validation rules to stored data.
 """
 
 from __future__ import annotations
@@ -70,14 +62,7 @@ class PenaltyType(models.TextChoices):
 
 
 class GameEventBase(models.Model):
-    """Abstract base for timestamped, team‑bound game events.
-
-    Attributes:
-        game: Game to which the event belongs.
-        team: Team credited with the event (must participate in the game).
-        period: Game period when the event occurred.
-        second_in_period: Seconds elapsed within the period.
-    """
+    """Abstract base for timestamped, team-bound game events."""
 
     game = models.ForeignKey(
         "powerplay_app.Game", on_delete=models.CASCADE, verbose_name="Zápas"
@@ -91,32 +76,23 @@ class GameEventBase(models.Model):
     class Meta:
         abstract = True
 
-    def clean(self) -> None:
-        """Ensure the selected team participates in the given game.
-
-        Raises:
-            ValidationError: If the team is not either the home or away team.
-        """
-        if (
-            self.game_id
-            and self.team_id
-            and self.team_id
-            not in (self.game.home_team_id, self.game.away_team_id)
-        ):
-            raise ValidationError(
-                "Událost může být jen pro tým účastnící se zápasu."
-            )
+    # >>> ADDED: jednotné zobrazení času „mm:ss“
+    @property
+    def clock(self) -> str:
+        """Return mm:ss based on ``second_in_period`` (no DB changes)."""
+        try:
+            total = int(self.second_in_period or 0)
+        except (TypeError, ValueError):
+            return ""
+        m, s = divmod(total, 60)
+        return f"{m}:{s:02d}"
 
 
 # --- Concrete events -------------------------------------------------------
 
 
 class Goal(GameEventBase):
-    """Scored goal with optional primary/secondary assists.
-
-    Validation ensures scorer and assistants belong to the scoring team and are
-    nominated for the game.
-    """
+    """Scored goal with optional primary/secondary assists."""
 
     scorer = models.ForeignKey(
         "powerplay_app.Player",
@@ -149,18 +125,7 @@ class Goal(GameEventBase):
         verbose_name_plural = "Góly"
 
     def clean(self) -> None:
-        """Run base validation and goal-specific domain rules.
-
-        Rules:
-            * Team must participate in the game (base rule).
-            * Scorer/assistants must belong to the scoring team.
-            * Scorer/assistants must be nominated for the game.
-            * Assistant 1 cannot be the scorer.
-            * Assistant 2 cannot be the scorer nor equal to Assistant 1.
-
-        Raises:
-            ValidationError: If any rule is violated.
-        """
+        """Domain validation for goals."""
         super().clean()
 
         players = [self.scorer, self.assist_1, self.assist_2]
@@ -189,11 +154,7 @@ class Goal(GameEventBase):
 
 
 class Penalty(GameEventBase):
-    """Penalty assigned to a player within a specific game/team context.
-
-    Validation ensures the player belongs to the penalized team and is
-    nominated for the game.
-    """
+    """Penalty assigned to a player within a specific game/team context."""
 
     penalized_player = models.ForeignKey(
         "powerplay_app.Player", on_delete=models.CASCADE, verbose_name="Faulující hráč"
@@ -209,12 +170,7 @@ class Penalty(GameEventBase):
         verbose_name_plural = "Tresty"
 
     def clean(self) -> None:
-        """Run base validation and penalty-specific rules.
-
-        Raises:
-            ValidationError: If the player is not from the penalized team or was
-            not nominated for the game.
-        """
+        """Domain validation for penalties."""
         super().clean()
 
         if self.penalized_player and self.penalized_player.team_id != self.team_id:

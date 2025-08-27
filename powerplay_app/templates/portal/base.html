@@ -6,14 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}{% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}Oficiální web týmu{% endblock %}" />
+
   <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
+  {% block extra_css %}{% endblock %}
+
   <!-- Oswald (nadpisy) – stejné jako Site -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+
   <!-- Portál akcent a drobné overrides -->
   <link rel="stylesheet" href="{% static 'portal/css/base.css' %}">
-  {% block extra_css %}{% endblock %}
 </head>
 <body class="portal">
   {% include "portal/_partials/nav.html" %}

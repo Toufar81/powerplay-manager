@@ -1,0 +1,21 @@
+{# file: powerplay_app/templates/site/_partials/player_chip.html #}
+{% if player %}
+  {% url 'site:player_detail' pk=player.pk as player_url %}
+
+  <a href="{{ player_url }}" class="chip chip--text chip--link">
+    {% if player.jersey_number %}
+      <span class="chip__num">#{{ player.jersey_number }}</span>
+    {% endif %}
+    <span class="chip__name">
+      {% if player.nickname %}
+        {{ player.nickname }}
+      {% elif player.last_name %}
+        {{ player.last_name }}
+      {% else %}
+        —
+      {% endif %}
+    </span>
+  </a>
+{% else %}
+  <div class="chip chip--text chip--empty">—</div>
+{% endif %}

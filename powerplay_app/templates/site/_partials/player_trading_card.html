@@ -1,0 +1,42 @@
+{% load static %}
+{# Trading-card karta hráče – vzhled podle návrhu (gold gradient, tilt box, svislé nápisy) #}
+{% with p=player %}
+<a href="{% url 'site:player_detail' p.id %}"
+   class="player-card player-card--tc has-tilt has-gloss is-foil"
+   aria-label="Detail hráče {{ p.first_name }} {{ p.last_name }}">
+
+  <div class="tc tc--neo">
+
+    {# vnitřní „tilt“ box a zlatý rám/glow #}
+    <div class="tc__tilt" aria-hidden="true"></div>
+    <div class="tc__frame" aria-hidden="true"></div>
+
+    {# foto hráče #}
+    <img class="tc__photo"
+         src="{{ p.photo_url }}"
+         alt="{{ p.first_name }} {{ p.last_name }}"
+         loading="lazy" decoding="async">
+
+    {# nálepka s logem týmu #}
+    {% if p.team and p.team.logo %}
+      <img class="tc__logo tc__logo--sticker" src="{{ p.team.logo.url }}" alt="" aria-hidden="true">
+    {% endif %}
+
+    {# svislé nápisy: vlevo nickname (fallback příjmení), vpravo #číslo + pozice #}
+    <div class="tc__side tc__side--left">
+      <span class="tc__sidetext">{{ p.nickname|default:p.last_name }}</span>
+    </div>
+    <div class="tc__side tc__side--right">
+      <span class="tc__sidetext">
+        {% if p.jersey_number %}#{{ p.jersey_number }} {% endif %}{{ p.get_position_display }}
+      </span>
+    </div>
+
+    {# jméno dole – celé (first + last) #}
+    <div class="tc__namewrap is-foil-name">
+      <span class="tc__name">{{ p.first_name }} {{ p.last_name }}</span>
+    </div>
+
+  </div>
+</a>
+{% endwith %}

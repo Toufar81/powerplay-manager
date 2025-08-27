@@ -1,4 +1,4 @@
-# powerplay_app/models.py
+# file: powerplay_app/models.py
 """Core domain models for the hockey team management app.
 
 Contains foundational entities:
@@ -15,6 +15,7 @@ schema are unchanged.
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import quote
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -89,6 +90,24 @@ class Stadium(models.Model):
     def __str__(self) -> str:  # pragma: no cover - trivial
         return self.name
 
+    # --- helper for safe embed ------------------------------------------------
+    def embed_url(self) -> str | None:
+        """Return a Google Maps *embed* URL when possible.
+
+        Logic:
+        - If ``map_url`` already looks like an embeddable link (contains
+          "embed" or "output=embed"), use it as-is.
+        - Else, if we have at least an address (fallback to name), construct
+          a generic Google query embed URL.
+        - Otherwise return ``None`` to indicate there is nothing to embed.
+        """
+        if self.map_url and ("embed" in self.map_url or "output=embed" in self.map_url):
+            return self.map_url
+        query = self.address or self.name
+        if query:
+            return f"https://www.google.com/maps?q={quote(query)}&output=embed"
+        return None
+
 
 # --- Team ------------------------------------------------------------------
 
@@ -161,7 +180,7 @@ class Player(models.Model):
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Stát")
     nickname = models.CharField("Přezdívka", max_length=50, blank=True, null=True)
     phone = models.CharField("Telefon", max_length=20, blank=True, null=True)
-    email = models.EmailField("E‑mail", blank=True, null=True)
+    email = models.EmailField("E-mail", blank=True, null=True)
     jersey_number = models.PositiveIntegerField("Číslo dresu")
     position = models.CharField("Pozice", max_length=50, choices=Position.choices)
     team = models.ForeignKey(

@@ -16,6 +16,8 @@ from typing import Any, Optional
 from django import template
 from django.db.models import Q
 from django.utils import timezone
+from django.urls import reverse
+from django.utils.text import slugify
 
 from powerplay_app.models.games import Game, GameCompetition
 
@@ -97,6 +99,26 @@ def _team_region(team: Any) -> Optional[str]:
     )
 
 
+def _detail_url(game: Game) -> Optional[str]:
+    """Prefer model's get_absolute_url(); fallback to reverse with slug."""
+    if not game:
+        return None
+    get_abs = getattr(game, "get_absolute_url", None)
+    if callable(get_abs):
+        try:
+            return get_abs()
+        except Exception:
+            pass
+    date_part = game.starts_at.date().isoformat() if game.starts_at else "game"
+    home = slugify(getattr(game.home_team, "name", "home"))
+    away = slugify(getattr(game.away_team, "name", "away"))
+    slug = f"{date_part}-{home}-vs-{away}"
+    try:
+        return reverse("site:game_detail", args=[game.pk, slug])
+    except Exception:
+        return None
+
+
 @register.inclusion_tag("site/_partials/latest_match.html", takes_context=True)
 def latest_match(context: dict[str, Any]) -> dict[str, Any]:
     """Vrátí kontext pro POSLEDNÍ odehraný zápas (starts_at <= now).
@@ -165,4 +187,5 @@ def latest_match(context: dict[str, Any]) -> dict[str, Any]:
         "primary_team": primary_team,
         "home": home,
         "away": away,
+        "detail_url": _detail_url(g),
     }

@@ -23,6 +23,8 @@ from django.db.models import Q
 
 from .tournaments import Tournament
 from .core import League
+from django.urls import reverse
+from django.utils.text import slugify
 
 
 # --- Competition enum ------------------------------------------------------
@@ -185,6 +187,16 @@ class Game(models.Model):
         """Readable label: ``Home vs Away (YYYY-MM-DD HH:MM)``."""
         return f"{self.home_team} vs {self.away_team} ({self.starts_at:%Y-%m-%d %H:%M})"
 
+    def canonical_slug(self) -> str:
+        """Canonical human-readable slug: YYYY-MM-DD-home-vs-away."""
+        date_part = self.starts_at.date().isoformat() if self.starts_at else "game"
+        home = slugify(self.home_team.name) if self.home_team_id else "home"
+        away = slugify(self.away_team.name) if self.away_team_id else "away"
+        return f"{date_part}-{home}-vs-{away}"
+
+    def get_absolute_url(self) -> str:  # pragma: no cover - simple helper
+        """Site URL for public/portal detail (same view, forks by auth)."""
+        return reverse("site:game_detail", args=[self.pk, self.canonical_slug()])
 
 # --- Game nomination -------------------------------------------------------
 

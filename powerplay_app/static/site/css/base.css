@@ -14,6 +14,823 @@
 
   --c-border: #1f242b;
 
+  --rink-size: 44%;   /* default – dřív bylo ~96 % */
+
+  /* typografie a rytmus */
+  --ff-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --ff-cond: "Oswald", var(--ff-sans);      /* titulek/hero – webfont připojen v <head> */
+  --fs-base: 16px;
+  --radius: 10px;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --container: 1200px;
+
+  /* nav */
+  --nav-height: 56px;
+  --nav-hover-bg: rgba(255,255,255,.06);
+  --nav-pill-radius: 10px;
+}
+
+/* 2) Reset + základ */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+html{ font-size: var(--fs-base); }
+body{
+  margin:0;
+  font-family: var(--ff-sans);
+  color: var(--c-text);
+  background: radial-gradient(1200px 800px at 50% -10%, #17202a 0%, var(--c-bg) 60%) fixed var(--c-bg);
+  line-height:1.55;
+}
+
+/* 3) Grid */
+.container{
+  width: min(100% - 2rem, var(--container));
+  margin-inline:auto;
+}
+
+/* 4) Card */
+.card{
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+}
+.card__title{
+  margin:0 0 .25rem 0;
+  font-family: var(--ff-cond);
+  letter-spacing:.5px;
+  font-weight:600;
+}
+
+/* 5) Header / nav (sjednoceno) */
+.nav{
+  background: linear-gradient(180deg, #0d1117 0%, #0a0d10 100%);
+  border-bottom:1px solid var(--c-border);
+  min-height: var(--nav-height);
+}
+.nav__inner{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:.5rem 1rem; padding:.5rem 0;
+}
+.brand{
+  display:flex; align-items:center; gap:.65rem; text-decoration:none; color:var(--c-text);
+  font-weight:700; letter-spacing:.5px;
+}
+.brand__dot{ width:10px; height:10px; background:var(--c-primary); border-radius:50%; display:inline-block; }
+.breadcrumbs{ font-size:.875rem; color:var(--c-muted); }
+
+/* NAV: menu */
+.nav__menu{ display:flex; align-items:center; gap:.5rem; margin:0; padding:0; list-style:none; }
+.nav__item{ margin:0; padding:0; }
+.nav__link{ display:inline-flex; align-items:center; gap:.35rem; padding:.45rem .7rem; border-radius:var(--nav-pill-radius); text-decoration:none; color:var(--c-text); opacity:.9; }
+.nav__link:hover{ opacity:1; background: var(--nav-hover-bg); }
+.nav__link.is-active{ background: var(--nav-accent-bg, var(--c-primary)); color: var(--nav-accent-fg, #111); font-weight:800; }
+@media (max-width: 720px){ .nav__inner{ flex-wrap:wrap; } .nav__menu{ width:100%; flex-wrap:wrap; } }
+
+/* ===== Player Detail – scoped na .p-player ===== */
+.p-player .player-hero{
+  padding: clamp(1.4rem, 3vw, 2.2rem) 0;
+  border-bottom: 1px solid var(--c-border);
+  background:
+    radial-gradient(700px 300px at 90% 0%, rgba(255,209,0,.08), transparent 60%),
+    radial-gradient(600px 250px at 10% 0%, rgba(255,209,0,.12), transparent 60%);
+}
+.p-player .player-hero__inner{
+  display:grid; grid-template-columns: 200px 1fr; gap:1rem; align-items:center;
+}
+.p-player .player-hero__photo{
+  width:200px; height:200px; object-fit:cover; border-radius:18px;
+  background:#0d1117;
+  /* “trading-card” ring: jemný žlutý lem + vnitřní linka */
+  border: 1px solid var(--c-primary);
+  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,184,28,.28);
+}
+
+/* Top řádek: #chip + jméno */
+.p-player .player-hero__top{ display:flex; align-items:baseline; gap:.65rem; }
+.p-player .player-hero__name{ margin:0; font-family:var(--ff-cond); font-weight:900; font-size:clamp(1.6rem, 4vw, 2.4rem); }
+
+/* Pozice / věk / země: tečky neřvou */
+.p-player .player-hero__meta{ display:flex; align-items:center; gap:.5rem; margin-top:.25rem; }
+.p-player .player-hero__meta .dot{ width:4px; height:4px; background:var(--c-border); border-radius:999px; }
+
+/* Kontakty */
+.p-player .player-hero__contacts{ margin-top:.35rem; display:flex; align-items:center; gap:.5rem; }
+
+/* Akce – pilly ve stylu filtrů (tmavé pozadí, žlutý lem i text) */
+.p-player .player-hero__actions{ margin-top:.6rem; display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.p-player .pill{
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.45rem .9rem; border-radius: var(--nav-pill-radius);
+  text-decoration:none; font-weight:900; letter-spacing:.02em;
+  background: var(--c-surface); color: var(--c-primary);
+  border: 1px solid var(--c-primary);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+.p-player .pill:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+.p-player .pill--hollow{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+    var(--c-surface);
+}
+
+/* # dresu – stejné “pill” DNA jako filtry */
+.p-player .jersey{
+  display:inline-flex; align-items:center;
+  padding:.25rem .65rem; border-radius:999px;
+  background: var(--c-surface);
+  border:1px solid var(--c-primary);
+  color: var(--c-primary);
+  font-weight:900; letter-spacing:.02em;
+  box-shadow: 0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.p-player .jersey--xl{ font-size: clamp(1rem, 2.4vw, 1.2rem); }
+
+/* Pozice jako chip ve stejném stylu */
+.p-player .badge{
+  display:inline-flex; align-items:center;
+  padding:.18rem .55rem; border-radius:999px;
+  background: var(--c-surface);
+  border:1px solid var(--c-primary);
+  color: var(--c-primary);
+  font-weight:900; letter-spacing:.02em; font-size:.92rem;
+}
+
+/* Mobil – stacking */
+@media (max-width: 720px){
+  .p-player .player-hero__inner{ grid-template-columns: 1fr; }
+  .p-player .player-hero__photo{ width:160px; height:160px; }
+}
+
+/* A11y – focus ring */
+.nav a:focus-visible, .auth__btn:focus-visible{ outline:2px solid currentColor; outline-offset:2px; }
+
+/* 6) Hero */
+.hero{
+  position:relative;
+  padding: clamp(3rem, 6vw, 6rem) 0;
+  background:
+    radial-gradient(600px 300px at 20% 0%, rgba(255,209,0,.12), transparent 60%),
+    radial-gradient(500px 250px at 80% 10%, rgba(255,209,0,.08), transparent 60%);
+  border-bottom:1px solid var(--c-border);
+}
+.hero__eyebrow{ color: var(--c-primary); font-size:.9rem; letter-spacing:.15em; text-transform:uppercase; }
+.hero__title{ margin:.35rem 0 .5rem 0; font-family: var(--ff-cond); font-size: clamp(2rem, 4.5vw, 3rem); line-height:1.1; }
+.hero__meta{ color:var(--c-muted); }
+
+/* 7) Flash zprávy */
+.flash{ margin:1rem 0; display:grid; gap:.5rem; }
+.flash__item{ padding:.75rem 1rem; border-radius:8px; border:1px solid var(--c-border); background:#0f1318; }
+.flash__item--success{ border-color:#0f5132; background:#0b2e21; color:#c6f6d5; }
+.flash__item--error{ border-color:#842029; background:#2c0b0e; color:#f8d7da; }
+
+/* 8) Footer */
+.footer{ border-top:1px solid var(--c-border); margin-top:2rem; }
+.footer__inner{ padding:1rem 0; display:flex; justify-content:space-between; gap:1rem; color:var(--c-muted); }
+
+/* 9) Util */
+.mt-2{ margin-top:.5rem; }
+.mt-4{ margin-top:1rem; }
+
+.strip--next-game .strip__empty { font-weight: 600; opacity: .9; }
+
+/* Sponsors strip */
+.strip--sponsors { background: var(--c-bg, #0b0b0b); color: var(--c-fg, #fff); position: relative; }
+.strip--sponsors .strip__inner { max-width: 1200px; margin: 0 auto; padding: .5rem clamp(.75rem, 3vw, 1.25rem); }
+.strip--sponsors .strip__tag { font-size: .75rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; opacity: .85; margin-bottom: .25rem; }
+
+.sponsors { display: flex; align-items: center; gap: clamp(.75rem, 2.2vw, 1.25rem); overflow-x: auto; scroll-snap-type: x mandatory; padding: .25rem 0 .5rem; -ms-overflow-style: none; scrollbar-width: none; }
+.sponsors::-webkit-scrollbar { display: none; }
+
+.sponsors__item { flex: 0 0 auto; scroll-snap-align: start; }
+.sponsor { display: grid; place-items: center; width: clamp(120px, 16vw, 180px); height: clamp(44px, 6vw, 56px); padding: .25rem .5rem; border-radius: 12px; background: rgba(255,255,255,.06); text-decoration: none; }
+.sponsor:hover { background: rgba(255,255,255,.1); }
+.sponsor__logo { max-width: 100%; max-height: 100%; object-fit: contain; }
+.sponsor__name { font-weight: 700; font-size: .9rem; color: inherit; opacity: .9; }
+
+/* optional edge fade */
+.strip--sponsors::before, .strip--sponsors::after { content: ""; position: absolute; top: 0; bottom: 0; width: 30px; pointer-events: none; }
+.strip--sponsors::before { left: 0; background: linear-gradient(90deg, var(--c-bg, #0b0b0b), rgba(11,11,11,0)); }
+.strip--sponsors::after { right: 0; background: linear-gradient(270deg, var(--c-bg, #0b0b0b), rgba(11,11,11,0)); }
+
+/* Sections */
+.section { padding: 1.25rem 0; }
+.section__head { margin-bottom: .5rem; }
+.section__title { font-size: clamp(1.05rem, 2.4vw, 1.35rem); font-weight: 800; }
+.muted { opacity: .75; }
+
+/* Match card */
+.match-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: .9rem; }
+.match-card__row { display: grid; grid-template-columns: 1fr auto 1fr; gap: .75rem; align-items: center; }
+.match-card__team { display: grid; grid-template-columns: 1fr auto; gap: .5rem; align-items: baseline; }
+.match-card__team--us { text-align: left; }
+.match-card__team--them { text-align: right; }
+.match-card__name { font-weight: 700; opacity: .95; }
+.match-card__score { font-weight: 900; font-size: clamp(1.3rem, 3vw, 1.8rem); }
+.match-card__vs { opacity: .6; }
+.match-card__meta { display: flex; flex-wrap: wrap; gap: .4rem .6rem; margin-top: .5rem; font-size: .9rem; opacity: .95; }
+.match-card__dot { opacity: .6; }
+
+@media (max-width: 640px) {
+  .match-card__row { grid-template-columns: 1fr; gap: .25rem; }
+  .match-card__team { grid-template-columns: auto 1fr; }
+  .match-card__team--them { justify-content: end; }
+}
+
+/* Players grid */
+.players-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:1rem; }
+.player-card{ background: var(--c-surface); border:1px solid var(--c-border); border-radius: var(--radius); padding:.75rem; text-align:center; }
+.player-card__photo{ width:100%; height:auto; border-radius:12px; background: rgba(255,255,255,.06); }
+.player-card__name{ margin-top:.5rem; font-weight:800; }
+
+/* Staff list */
+.staff-list{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:1rem; }
+.staff-card{ background: var(--c-surface); border:1px solid var(--c-border); border-radius: var(--radius); padding:.75rem; text-align:center; }
+.staff-card__photo{ width:100%; height:auto; border-radius:12px; background: rgba(255,255,255,.06); }
+.staff-card__name{ margin-top:.5rem; font-weight:800; }
+.staff-card__role{ margin-top:.1rem; }
+
+/* Player detail hero */
+.player-hero{ padding: clamp(1.25rem, 3vw, 2rem) 0; border-bottom:1px solid var(--c-border); background:
+  radial-gradient(700px 300px at 90% 0%, rgba(255,209,0,.08), transparent 60%),
+  radial-gradient(600px 250px at 10% 0%, rgba(255,209,0,.12), transparent 60%);
+}
+.player-hero__inner{ display:grid; grid-template-columns: 200px 1fr; gap:1rem; align-items:center; }
+.player-hero__photo{ width:200px; height:200px; object-fit:cover; border-radius:18px; background:rgba(255,255,255,.06); border:1px solid var(--c-border); box-shadow: var(--shadow); }
+.player-hero__top{ display:flex; align-items:baseline; gap:.65rem; }
+.player-hero__name{ margin:0; font-family: var(--ff-cond); font-size: clamp(1.6rem, 4vw, 2.4rem); }
+.jersey--xl{ font-size: clamp(1.2rem, 3vw, 1.6rem); }
+.player-hero__meta{ display:flex; align-items:center; gap:.5rem; margin-top:.2rem; }
+.player-hero__contacts{ margin-top:.35rem; display:flex; align-items:center; gap:.5rem; }
+
+/* Info grid */
+.info-grid{ display:grid; gap:.4rem; max-width: 640px; }
+.info-row{ display:grid; grid-template-columns: 180px 1fr; gap:.5rem; padding:.45rem .6rem; border:1px solid var(--c-border); background:rgba(255,255,255,.04); border-radius:10px; }
+.info-k{ opacity:.7; }
+.info-v{ font-weight:700; }
+
+@media (max-width: 720px){
+  .player-hero__inner{ grid-template-columns: 1fr; }
+  .player-hero__photo{ width:160px; height:160px; }
+}
+
+/* Make entire player card clickable */
+.player-card{ text-decoration:none; color:inherit; transition: transform .08s ease; }
+.player-card:hover{ transform: translateY(-1px); }
+
+/* Buttons */
+.btn{ display:inline-block; background:var(--c-primary); color:#000; font-weight:800; text-decoration:none; padding:.5rem .9rem; border-radius:10px; box-shadow:var(--shadow); }
+.btn:hover{ filter:brightness(.98); }
+
+/* Auth (sjednoceno) */
+.nav__inner{ position:relative; }
+.nav__auth{ margin-left:auto; display:flex; align-items:center; gap:.5rem; }
+.auth--logout{ margin:0; }
+.auth__btn,
+.auth__link{ -webkit-appearance:none; appearance:none; font: inherit; cursor: pointer; text-decoration:none; color:inherit; padding:.35rem .6rem; border-radius:10px; border:1px solid var(--c-border); box-shadow: var(--shadow); background: rgba(255,255,255,.06); }
+.auth__btn:hover, .auth__link:hover{ background: rgba(255,255,255,.10); }
+.auth__user{ font-weight:700; opacity:.85; }
+
+/* Link util */
+.link{ color:var(--c-text); text-decoration:none; }
+.link:hover{ text-decoration:underline; }
+.dot{ display:inline-block; width:4px; height:4px}
+
+/* Home – hero (photo) */
+.hero--photo{
+  position: relative;
+  min-height: clamp(380px, 48vw, 600px);
+  padding: clamp(2.5rem, 4.5vw, 5rem) 0;
+  display: grid;
+  align-items: center;
+  background: #0b0d0f; /* fallback */
+  background-image: var(--hero-img);
+  background-size: cover;
+  background-position: center 42%;
+  isolation: isolate; /* zajistí, že overlaye neuniknou mimo */
+}
+/* Tmavení kvůli čitelnosti */
+.hero--photo::before{ content:""; position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.45) 35%, rgba(0,0,0,.35) 70%, rgba(0,0,0,.55) 100%);
+  z-index:0;
+}
+/* Vignette + "stadium glow" v barvě klubu (velmi jemné) */
+.hero--photo::after{ content:""; position:absolute; inset:-2% -2% -2% -2%;
+  background:
+    radial-gradient(60% 35% at 50% 8%, rgba(255,184,28,.18), rgba(255,184,28,0) 60%),
+    radial-gradient(120% 80% at 50% 100%, rgba(0,0,0,.45), rgba(0,0,0,0) 40%);
+  pointer-events:none; z-index:0;
+}
+.hero--photo .hero__content{ position:relative; z-index:1; max-width: 760px; text-shadow: 0 2px 10px rgba(0,0,0,.45); }
+.hero--photo .hero__title{ font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 700; }
+
+@media (max-width: 720px){
+  .hero--photo{ text-align:center; background-position: center 30%; }
+  .hero--photo .hero__content{ margin-inline:auto; }
+}
+
+/* ===== Utilities ===== */
+/* Full‑bleed sekce (přes celou šířku i když je uvnitř .container) */
+.full-bleed {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+@supports (margin-inline: calc(50% - 50vw)) {
+  .full-bleed { left: auto; right: auto; margin-inline: calc(50% - 50vw); }
+}
+
+/* Jemný předěl pod hero */
+.hero--photo { border-bottom: 1px solid var(--c-border); }
+
+/* Mobilní ořez / typografie */
+@media (max-width: 720px){
+  .hero--photo{
+    background-position: 35% 30%;
+    min-height: clamp(300px, 56vw, 420px);
+  }
+  .hero--photo .hero__title{ font-size: clamp(1.8rem, 7vw, 2.6rem); }
+}
+/* Hero – logo */
+.hero--has-logo { position: relative; }
+.hero__logo{
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: clamp(10px, 2.5vw, 24px);
+  height: clamp(72px, 12vw, 140px); width: auto;
+  z-index: 2; /* nad overlayi i obsahem */
+  pointer-events: none; user-select: none;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.55)) drop-shadow(0 2px 6px rgba(0,0,0,.35));
+}
+/* posun obsahu níž, aby se netloukl s logem */
+.hero--has-logo .hero__content{ margin-top: clamp(36px, 6vw, 84px); }
+
+@media (max-width: 720px){
+  .hero__logo{ height: clamp(56px, 14vw, 92px); top: clamp(8px, 3vw, 14px); }
+}
+/* A11y helper */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+/* Sticky nav */
+.nav { position: sticky; top: 0; z-index: 1000; }
+
+/* Globálně skrýt breadcrumbs */
+.breadcrumbs { display: none !important; }
+
+/* Skrytí brand tečky */
+.brand__dot { display: none !important; }
+
+/* —— Pevně ukotvený header napříč celým webem —— */
+:root { --nav-h: 62px; }
+
+/* zrušíme předchozí sticky a vynutíme fixed */
+.nav { position: fixed !important; top: 0; left: 0; right: 0; z-index: 10020; }
+
+/* odsazení obsahu pod pevnou navigaci */
+body { padding-top: var(--nav-h); }
+
+/* při zalomení menu navýšíme rezervu (ladit dle potřeby) */
+@media (max-width: 720px) {
+  :root { --nav-h: 96px; }
+}
+
+/* jistota, že hero vrstvy jsou pod nav a neblokují kliky */
+.hero, .hero::before, .hero::after { position: relative; z-index: 0; }
+.hero--photo::before { pointer-events: none; }
+
+/* Next Game — logo podpora a jemné dorovnání typografie */
+.strip--next-game .strip__teams { align-items: center; }
+.strip--next-game .strip__logo { width: 36px; height: 36px; border-radius: 50%; background: #fff; padding: 4px; object-fit: contain; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.strip--next-game .strip__logo + .strip__team { margin-left: .15rem; }
+.strip--next-game .strip__team { font-weight: 900; }
+.strip--next-game .strip__vs { font-weight: 800; opacity: .9; margin: 0 .35rem; }
+
+/* mobil: ať se loga neroztahují řádek zbytečně vysoko */
+@media (max-width: 480px) {
+  .strip--next-game .strip__logo { width: 30px; height: 30px; padding: 3px; }
+}
+
+/* === Next Game banner (HOME vlevo, AWAY vpravo) — finální vzhled === */
+.strip--next-game { background: var(--c-bg); color: var(--c-text); }
+.strip--next-game .ngrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(.9rem, 3vw, 1.4rem);
+}
+
+/* Titulek */
+.strip--next-game .strip__title{
+  grid-column: 1 / -1;
+  text-align:center;
+  font-family: var(--ff-cond);
+  letter-spacing:.03em;
+  font-weight:900;
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  color: var(--c-text);
+  opacity:.95;
+  margin: .2rem 0 .55rem;
+}
+.strip--next-game .strip__title span{ color: var(--c-primary); }
+
+/* Karty týmů */
+.team-card{
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  position: relative;
+  min-height: clamp(64px, 7.5vw, 86px);
+}
+.team-card--left{  clip-path: polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%); }
+.team-card--right{ clip-path: polygon(6% 0, 100% 0, 100% 100%, 6% 100%, 0 50%); }
+.team-card.is-us{ border-color: var(--c-primary); box-shadow: 0 0 0 1px rgba(255,184,28,.25) inset; }
+.team-card__inner{
+  display:flex; align-items:center; justify-content:space-between;
+  gap: clamp(.6rem, 2.5vw, 1rem);
+  padding: clamp(.7rem, 2vw, .95rem) clamp(.9rem, 2.2vw, 1.2rem);
+}
+.team-card--left .team-card__inner{ padding-left: clamp(1rem, 3vw, 1.4rem); }
+.team-card--right .team-card__inner{ padding-right: clamp(1rem, 3vw, 1.4rem); }
+.team-card__logo{
+  width: clamp(72px, 8vw, 96px);
+  height: clamp(72px, 8vw, 96px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
+}
+.team-card--left .team-card__logo{ margin-left: .1rem; }
+.team-card--right .team-card__logo{ margin-right: .1rem; }
+.team-card__text{ display:grid; gap:.18rem; }
+.team-card__text--right{ text-align: right; }
+.team-card__name{ font-weight: 900; font-size: clamp(1.02rem, 3vw, 1.4rem); color: var(--c-text); letter-spacing:.01em; }
+.team-card__meta{ font-size:.8rem; letter-spacing:.06em; opacity:.85; color: var(--c-muted); text-transform: uppercase; }
+
+/* Střední sloupec */
+.midcol{ text-align:center; min-width: 170px; }
+.midcol__date{ font-weight: 900; color: var(--c-text); letter-spacing:.06em; font-size: clamp(.95rem, 2.2vw, 1.15rem); }
+.midcol__time{ font-weight: 900; font-size: clamp(1rem, 2.6vw, 1.35rem); color: var(--c-primary); margin-top:.1rem; }
+.midcol__meta{ margin-top:.3rem; font-size:.86rem; opacity:.96; color: var(--c-text); }
+.strip__icons{ display:flex; justify-content:center; gap:.5rem; margin-top:.4rem; }
+.strip__iconlink{ display:inline-flex; align-items:center; justify-content:center; width: 30px; height: 30px; border-radius:999px; background:#111; color:#fff; text-decoration:none; font-size:.9rem; border:1px solid rgba(255,255,255,.1); }
+.strip__iconlink:hover{ filter:brightness(1.05); }
+
+/* Responzivní úpravy */
+@media (max-width: 720px){
+  .strip--next-game .ngrid{ grid-template-columns: 1fr; }
+  .team-card--left, .team-card--right{ clip-path: none; }
+  .team-card__inner{ justify-content:center; }
+  .team-card__text--right{ text-align:left; }
+  .team-card__logo{ width: clamp(56px, 18vw, 74px); height: clamp(56px, 18vw, 74px); }
+}
+/* === NEXT GAME — unified final (home vlevo, away vpravo) === */
+.strip--next-game { background: var(--c-bg); color: var(--c-text); }
+.strip--next-game .ngrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 1.6rem);
+}
+
+/* Titulek */
+.strip--next-game .strip__title{
+  grid-column: 1 / -1;
+  text-align:center;
+  font-family: var(--ff-cond);
+  letter-spacing:.03em;
+  font-weight:900;
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  color: var(--c-text);
+  opacity:.95;
+  margin: .2rem 0 .65rem;
+}
+.strip--next-game .strip__title span{ color: var(--c-primary); }
+
+/* Karty týmů – žlutý obrys na obou, užší „šipky“ které protínají logo */
+.team-card{
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,184,28,.65);
+  border-radius: 14px;
+  position: relative;
+  min-height: clamp(68px, 7.5vw, 92px);
+  box-shadow: 0 0 0 1px rgba(255,184,28,.35) inset;
+}
+/* šipky: hlouběji dovnitř (protínají logo) */
+.team-card--left{  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); }
+.team-card--right{ clip-path: polygon(8% 0, 100% 0, 100% 100%, 8% 100%, 0 50%); }
+
+.team-card__inner{
+  display:flex; align-items:center; justify-content:space-between;
+  gap: clamp(.6rem, 2.5vw, 1rem);
+  padding: clamp(.75rem, 2vw, 1rem) clamp(1rem, 2.4vw, 1.3rem);
+}
+.team-card--left .team-card__inner{ padding-left: clamp(1.1rem, 3vw, 1.5rem); }
+.team-card--right .team-card__inner{ padding-right: clamp(1.1rem, 3vw, 1.5rem); }
+
+/* větší loga */
+.team-card__logo{
+  width: clamp(84px, 9vw, 112px);
+  height: clamp(84px, 9vw, 112px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
+}
+.team-card--left .team-card__logo{ margin-left: .1rem; }
+.team-card--right .team-card__logo{ margin-right: .1rem; }
+
+.team-card__text{ display:grid; gap:.18rem; }
+.team-card__text--right{ text-align: right; }
+.team-card__name{ font-weight: 900; font-size: clamp(1.06rem, 3.2vw, 1.5rem); color: var(--c-text); letter-spacing:.01em; }
+.team-card__meta{ font-size:.8rem; letter-spacing:.06em; opacity:.85; color: var(--c-muted); text-transform: uppercase; }
+
+/* Střední sloupec */
+.midcol{ text-align:center; min-width: 180px; }
+.midcol__date{ font-weight: 900; color: var(--c-text); letter-spacing:.06em; font-size: clamp(1rem, 2.3vw, 1.2rem); }
+.midcol__time{ font-weight: 900; font-size: clamp(1.1rem, 2.7vw, 1.45rem); color: var(--c-primary); margin-top:.1rem; }
+.midcol__meta{ margin-top:.35rem; font-size:.88rem; opacity:.96; color: var(--c-text); }
+.strip__icons{ display:flex; justify-content:center; gap:.5rem; margin-top:.4rem; }
+.strip__iconlink{ display:inline-flex; align-items:center; justify-content:center; width: 30px; height: 30px; border-radius:999px; background:#111; color:#fff; text-decoration:none; font-size:.9rem; border:1px solid rgba(255,255,255,.1); }
+.strip__iconlink:hover{ filter:brightness(1.05); }
+
+/* Responzivní úpravy */
+@media (max-width: 720px){
+  .strip--next-game .ngrid{ grid-template-columns: 1fr; }
+  .team-card--left, .team-card--right{ clip-path: none; }
+  .team-card__inner{ justify-content:center; }
+  .team-card__text--right{ text-align:left; }
+  .team-card__logo{ width: clamp(64px, 22vw, 88px); height: clamp(64px, 22vw, 88px); }
+}
+/* === NEXT GAME – šipky přes půl loga (final tuning) === */
+.strip--next-game { background: var(--c-bg); color: var(--c-text); }
+.strip--next-game .ngrid{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:clamp(1rem,3vw,1.6rem); }
+
+
+/* Karty týmů – žlutý obrys na obou, hlubší šipky, povolený overlap loga */
+.team-card{ background: rgba(255,255,255,.06); border:1px solid rgba(255,184,28,.65); border-radius:14px; min-height:clamp(68px,7.5vw,92px); box-shadow:0 0 0 1px rgba(255,184,28,.35) inset; overflow: visible; }
+/* šipky více dovnitř – protínají logo cca v půlce */
+.team-card--left{ clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%); }
+.team-card--right{ clip-path: polygon(12% 0, 100% 0, 100% 100%, 12% 100%, 0 50%); }
+
+
+.team-card__inner{ display:flex; align-items:center; justify-content:space-between; gap:clamp(.6rem,2.5vw,1rem); padding:clamp(.75rem,2vw,1rem) clamp(1rem,2.4vw,1.3rem); }
+.team-card--left .team-card__inner{ padding-left:clamp(1.1rem,3vw,1.5rem); }
+.team-card--right .team-card__inner{ padding-right:clamp(1.1rem,3vw,1.5rem); }
+
+
+/* Větší loga + posun dovnitř, aby je diagonála vizuálně „křížila“ */
+.team-card__logo{ position:relative; z-index:1; width:clamp(88px,9.5vw,118px); height:clamp(88px,9.5vw,118px); object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.team-card--left .team-card__logo{ transform: translateX(14%); }
+.team-card--right .team-card__logo{ transform: translateX(-14%); }
+
+
+/* Typografie */
+.team-card__text{ display:grid; gap:.18rem; }
+.team-card__text--right{ text-align:right; }
+.team-card__name{ font-weight:900; font-size:clamp(1.06rem,3.2vw,1.5rem); color:var(--c-text); letter-spacing:.01em; }
+.team-card__meta{ font-size:.8rem; letter-spacing:.06em; opacity:.85; color:var(--c-muted); text-transform:uppercase; }
+
+
+/* Střední sloupec */
+.midcol{ text-align:center; min-width:180px; }
+.midcol__date{ font-weight:900; color:var(--c-text); letter-spacing:.06em; font-size:clamp(1rem,2.3vw,1.2rem); }
+.midcol__time{ font-weight:900; font-size:clamp(1.1rem,2.7vw,1.45rem); color:var(--c-primary); margin-top:.1rem; }
+.midcol__meta{ margin-top:.35rem; font-size:.88rem; opacity:.96; color:var(--c-text); }
+
+
+/* Mobil – stažení log a zrušení šipek kvůli čitelnosti */
+@media (max-width:720px){
+.strip--next-game .ngrid{ grid-template-columns:1fr; }
+.team-card--left, .team-card--right{ clip-path:none; }
+.team-card__inner{ justify-content:center; }
+.team-card__text--right{ text-align:left; }
+.team-card__logo{ width:clamp(68px,22vw,92px); height:clamp(68px,22vw,92px); transform:none !important; }
+}
+/* Latest Match – větší skóre uprostřed */
+.strip--latest-match .midcol__time{
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: .02em;
+}
+/* ---- Link overlay pro klikací stripy ---- */
+.link-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+}
+.link-overlay:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+/* aby ikony byly nad overlayem, pokud jsou */
+.strip__icons { position: relative; z-index: 6; }
+
+/* === RINK LAYOUT (lajny na hřišti) ====================================== */
+/* === Rink (hřiště) – širší varianta === */
+.rink{
+  position: relative;
+  width: 100%;
+  /* udržuje poměr stran – podle tvého rink.svg/ring.png */
+  aspect-ratio: 2.15 / 1;
+  border-radius: 16px;
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow);
+  margin: .75rem 0 1rem;
+
+  /* 1) obrázek hřiště (96 % šířky)  2) jemný glow  3) podklad */
+  background:
+    var(--rink-img, url("/static/site/img/ring.png")) center / var(--rink-size, 94%) auto no-repeat,
+    radial-gradient(600px 280px at 50% 0%, rgba(255,184,28,.06), transparent 60%),
+    #0d1117;
+}
+
+
+
+/* Kotvy pro umístění hráčů – centrování na souřadnici */
+.rink__pos{
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 640px){
+  .rink__pos{ min-width: 96px; }
+}
+
+/* Player chip (sdílené pro žetonek hráče) */
+.chip{
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow);
+}
+.chip__photo{
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: rgba(255,255,255,.08);
+}
+.chip__name{
+  font-weight: 800;
+  font-size: .9rem;
+  letter-spacing: .01em;
+}
+
+/* Souřadnice postů – laděno na širší layout */
+.pos-LW { left: 37%; top: 14%; }
+.pos-C  { left: 50%; top: 24%; }
+.pos-RW { left: 64%; top: 14%; }
+
+.pos-LD { left: 40%; top: 48%; }
+.pos-RD { left: 61%; top: 48%; }
+
+.pos-G  { left: 50%; top: 82%; }
+
+
+/* === Player chip – jednotný styl (neprůhledné pozadí) === */
+.chip{
+  display:inline-flex; align-items:center; gap:.45rem;
+  padding:.38rem .8rem;
+  border-radius: 999px;
+  background: #181d23;                 /* neprůhledné */
+  border: 1px solid #2a313a;           /* pevná hrana */
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  backdrop-filter: none;               /* žádné blur */
+  text-decoration: none;               /* pro <a> */
+  color: inherit;
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+.chip--link:hover{ filter:brightness(1.05); transform: translateY(-1px); }
+.chip--link:focus-visible{
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.chip__num{
+  color: var(--c-primary);             /* Bruins Gold */
+  font-weight: 900;
+  font-size: .9rem;
+  letter-spacing: .01em;
+}
+.chip__name{
+  color: var(--c-primary);             /* jméno taky žlutě */
+  font-weight: 800;
+  font-size: .95rem;
+  letter-spacing: .01em;
+  opacity: .98;
+}
+
+.chip--empty{ opacity:.6; }
+
+@media (max-width: 720px){
+  .chip{ padding:.32rem .7rem; }
+  .chip__name{ font-size:.9rem; }
+  .chip__num{ font-size:.84rem; }
+}
+/* ==== Game events (goals & penalties) ==== */
+.events{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.events__col{
+  background: var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+.events__team{
+  font-weight:900;
+  font-family: var(--ff-cond);
+  letter-spacing:.02em;
+  margin-bottom:.35rem;
+}
+.events__team--right{ text-align:right; }
+
+.events__blocktitle{ font-weight:800; opacity:.9; margin:.25rem 0 .25rem; }
+.events__list{ list-style:none; padding:0; margin:.25rem 0 0; display:grid; gap:.25rem; }
+
+.events__item{
+  display:flex; align-items:center; gap:.5rem;
+  padding:.3rem .5rem;
+  border:1px solid var(--c-border);
+  border-radius:10px;
+  background: rgba(255,255,255,.04);
+}
+.events__empty{
+  opacity:.6; padding:.35rem .5rem;
+  border:1px dashed var(--c-border); border-radius:8px;
+}
+
+.events__badge{
+  display:inline-block; min-width:34px; text-align:center;
+  padding:.1rem .4rem; border-radius:8px; font-weight:800;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+}
+.events__time{ font-variant-numeric: tabular-nums; opacity:.9; }
+.events__strong{ font-weight:900; text-decoration:none; color: var(--c-text); }
+.events__strong:hover{ text-decoration: underline; }
+.events__assist{ opacity:.95; }
+.events__tag{
+  margin-left:auto; font-size:.8rem; font-weight:800;
+  background: rgba(255,184,28,.16); color: var(--c-primary);
+  border:1px solid rgba(255,184,28,.35);
+  padding:.05rem .4rem; border-radius:999px;
+}
+.events__muted{ opacity:.85; }
+
+@media (max-width: 820px){
+  .events{ grid-template-columns: 1fr; }
+}
+
+/* Zarovnání, když má události jen jeden tým */
+.events.events--home-only { display: block; }
+.events.events--home-only .events__col { margin-right: auto; }
+
+.events.events--away-only { display: block; }
+.events.events--away-only .events__col { margin-left: auto; }
+
+/* Na mobilu zarovnání vycentrujeme */
+@media (max-width: 860px){
+  .events.events--home-only .events__col,
+  .events.events--away-only .events__col { margin-left: 0; margin-right: 0; }
+}
+/* Stadion karta */
+.stadium{ display:grid; grid-template-columns: 1fr min(520px, 45%); gap:1rem; align-items:start; }
+.stadium__name{ font-weight:900; font-size:1.05rem; }
+.stadium__addr{ opacity:.9; margin:.25rem 0 .5rem; }
+.stadium__map{ width:100%; height:260px; border:0; border-radius:12px; box-shadow: var(--shadow); }
+@media (max-width: 820px){
+  .stadium{ grid-template-columns: 1fr; }
+  .stadium__map{ height:220px; }
+}
+
+/* === PowerPlay – základy (bez frameworků) === */
+
+/* 1) Design tokens (proměnné) */
+:root{
+  /* Blackbirds = black / Bruins gold / white */
+  --c-bg: #0b0d0f;           /* tmavé pozadí stránky */
+  --c-surface: #12151a;      /* panely/karty/nav */
+  --c-text: #e6e6e6;         /* default text */
+  --c-muted: #9aa3af;        /* sekundární text */
+
+  --c-primary: #ffb81c;      /* Bruins Gold */
+  --c-primary-600: #e6a516;  /* hover */
+  --c-primary-700: #c88f12;  /* active */
+
+  --c-border: #1f242b;
+
+  --rink-size: 44%;   /* default – dřív bylo ~96 % */
+
   /* typografie a rytmus */
   --ff-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
   --ff-cond: "Oswald", var(--ff-sans);      /* titulek/hero – webfont připojen v <head> */
@@ -535,4 +1352,585 @@ body { padding-top: var(--nav-h); }
   font-size: clamp(1.8rem, 5vw, 2.6rem);
   line-height: 1;
   letter-spacing: .02em;
+}
+/* ---- Link overlay pro klikací stripy ---- */
+.link-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+}
+.link-overlay:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+/* aby ikony byly nad overlayem, pokud jsou */
+.strip__icons { position: relative; z-index: 6; }
+
+/* === RINK LAYOUT (lajny na hřišti) ====================================== */
+/* === Rink (hřiště) – širší varianta === */
+.rink{
+  position: relative;
+  width: 100%;
+  /* udržuje poměr stran – podle tvého rink.svg/ring.png */
+  aspect-ratio: 2.15 / 1;
+  border-radius: 16px;
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow);
+  margin: .75rem 0 1rem;
+
+  /* 1) obrázek hřiště (96 % šířky)  2) jemný glow  3) podklad */
+  background:
+    var(--rink-img, url("/static/site/img/ring.png")) center / var(--rink-size, 94%) auto no-repeat,
+    radial-gradient(600px 280px at 50% 0%, rgba(255,184,28,.06), transparent 60%),
+    #0d1117;
+}
+
+
+
+/* Kotvy pro umístění hráčů – centrování na souřadnici */
+.rink__pos{
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 640px){
+  .rink__pos{ min-width: 96px; }
+}
+
+/* Player chip (sdílené pro žetonek hráče) */
+.chip{
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow);
+}
+.chip__photo{
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: rgba(255,255,255,.08);
+}
+.chip__name{
+  font-weight: 800;
+  font-size: .9rem;
+  letter-spacing: .01em;
+}
+
+/* Souřadnice postů – laděno na širší layout */
+.pos-LW { left: 37%; top: 14%; }
+.pos-C  { left: 50%; top: 24%; }
+.pos-RW { left: 64%; top: 14%; }
+
+.pos-LD { left: 40%; top: 48%; }
+.pos-RD { left: 61%; top: 48%; }
+
+.pos-G  { left: 50%; top: 82%; }
+
+
+/* === Player chip – jednotný styl (neprůhledné pozadí) === */
+.chip{
+  display:inline-flex; align-items:center; gap:.45rem;
+  padding:.38rem .8rem;
+  border-radius: 999px;
+  background: #181d23;                 /* neprůhledné */
+  border: 1px solid #2a313a;           /* pevná hrana */
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  backdrop-filter: none;               /* žádné blur */
+  text-decoration: none;               /* pro <a> */
+  color: inherit;
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+.chip--link:hover{ filter:brightness(1.05); transform: translateY(-1px); }
+.chip--link:focus-visible{
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.chip__num{
+  color: var(--c-primary);             /* Bruins Gold */
+  font-weight: 900;
+  font-size: .9rem;
+  letter-spacing: .01em;
+}
+.chip__name{
+  color: var(--c-primary);             /* jméno taky žlutě */
+  font-weight: 800;
+  font-size: .95rem;
+  letter-spacing: .01em;
+  opacity: .98;
+}
+
+.chip--empty{ opacity:.6; }
+
+@media (max-width: 720px){
+  .chip{ padding:.32rem .7rem; }
+  .chip__name{ font-size:.9rem; }
+  .chip__num{ font-size:.84rem; }
+}
+/* ==== Game events (goals & penalties) ==== */
+.events{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.events__col{
+  background: var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+.events__team{
+  font-weight:900;
+  font-family: var(--ff-cond);
+  letter-spacing:.02em;
+  margin-bottom:.35rem;
+}
+.events__team--right{ text-align:right; }
+
+.events__blocktitle{ font-weight:800; opacity:.9; margin:.25rem 0 .25rem; }
+.events__list{ list-style:none; padding:0; margin:.25rem 0 0; display:grid; gap:.25rem; }
+
+.events__item{
+  display:flex; align-items:center; gap:.5rem;
+  padding:.3rem .5rem;
+  border:1px solid var(--c-border);
+  border-radius:10px;
+  background: rgba(255,255,255,.04);
+}
+.events__empty{
+  opacity:.6; padding:.35rem .5rem;
+  border:1px dashed var(--c-border); border-radius:8px;
+}
+
+.events__badge{
+  display:inline-block; min-width:34px; text-align:center;
+  padding:.1rem .4rem; border-radius:8px; font-weight:800;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+}
+.events__time{ font-variant-numeric: tabular-nums; opacity:.9; }
+.events__strong{ font-weight:900; text-decoration:none; color: var(--c-text); }
+.events__strong:hover{ text-decoration: underline; }
+.events__assist{ opacity:.95; }
+.events__tag{
+  margin-left:auto; font-size:.8rem; font-weight:800;
+  background: rgba(255,184,28,.16); color: var(--c-primary);
+  border:1px solid rgba(255,184,28,.35);
+  padding:.05rem .4rem; border-radius:999px;
+}
+.events__muted{ opacity:.85; }
+
+@media (max-width: 820px){
+  .events{ grid-template-columns: 1fr; }
+}
+
+/* Zarovnání, když má události jen jeden tým */
+.events.events--home-only { display: block; }
+.events.events--home-only .events__col { margin-right: auto; }
+
+.events.events--away-only { display: block; }
+.events.events--away-only .events__col { margin-left: auto; }
+
+/* Na mobilu zarovnání vycentrujeme */
+@media (max-width: 860px){
+  .events.events--home-only .events__col,
+  .events.events--away-only .events__col { margin-left: 0; margin-right: 0; }
+}
+/* Stadion karta */
+.stadium{ display:grid; grid-template-columns: 1fr min(520px, 45%); gap:1rem; align-items:start; }
+.stadium__name{ font-weight:900; font-size:1.05rem; }
+.stadium__addr{ opacity:.9; margin:.25rem 0 .5rem; }
+.stadium__map{ width:100%; height:260px; border:0; border-radius:12px; box-shadow: var(--shadow); }
+@media (max-width: 820px){
+  .stadium{ grid-template-columns: 1fr; }
+  .stadium__map{ height:220px; }
+}
+
+/* === Player Trading Card — „neo“ styl (final) =========================== */
+/* karta (poměr 63:88, zlatý přechod na tmavé, zaoblení, hluboký stín) */
+.player-card--tc{
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  border-radius: 18px;
+  overflow: hidden;
+  color: var(--c-text);
+  text-decoration: none;
+  background:
+    linear-gradient(135deg, #000 0%, rgba(255,184,28,.12) 36%, rgba(255,184,28,.28) 100%),
+    #0b0d0f;
+  border: 1px solid #2a313a;
+  box-shadow: 0 14px 36px rgba(0,0,0,.45);
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+}
+.player-card--tc:hover{ transform: translateY(-2px); filter: brightness(1.02); }
+.player-card--tc:focus-visible{ outline:2px solid var(--c-primary); outline-offset:3px; }
+
+.tc{ position: relative; width: 100%; height: 100%; }
+
+/* nakloněný vnitřní box (dekor „tilt“) */
+.tc__tilt{
+  position: absolute; inset: 18px;
+  border-radius: 10px;
+  transform: rotate(-7deg);
+  box-shadow:
+    0 0 22px rgba(255,184,28,.45),
+    inset 0 0 24px rgba(255,184,28,.35);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* zlatý rám / chromový glow uvnitř */
+.tc__frame{
+  position:absolute; inset:0; border-radius:18px; pointer-events:none;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,184,28,.38),
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    inset 0 0 30px rgba(255,184,28,.18);
+  z-index: 0;
+}
+
+/* foto hráče – rezerva dole pro jmenovku + AUTO-CROP + bezpečné okraje */
+.tc__photo{
+  position:absolute;
+  left: 16%;
+  right: 12%;
+  top: 12%;
+  bottom: 96px;               /* rezerva pro namewrap dole */
+  width:auto; height:auto;
+  max-width:76%; max-height:62%;
+
+  /* auto-crop + výřez výš k hlavě */
+  object-fit: cover;
+  object-position: 50% 18%;
+
+  /* bezpečné okraje (fallback 2 %) a zaoblení uvnitř */
+  clip-path: inset(var(--tc-photo-safe, 2%) round 10px);
+
+  border-radius: 10px;
+  box-shadow: 0 0 40px rgba(255,184,28,.35);
+  z-index: 1;
+}
+
+/* logo v pravém horním rohu (menší) */
+.tc__logo{
+  position:absolute; top:10px; right:12px;
+  width: 52px; height: 52px; object-fit: contain;
+  background:#fff; border-radius:12px; padding:5px;
+  border:1px solid rgba(255,255,255,.25);
+  box-shadow: 0 8px 18px rgba(0,0,0,.45);
+  z-index: 7;
+}
+.tc__logo--sticker{ transform: rotate(8deg); }
+
+/* svislé nápisy – panely zcela průhledné, bez rámečků (zůstane jen text) */
+.tc__side{
+  position:absolute; top: 18%; bottom: 18%;
+  display:grid; place-items:center;
+  padding-inline: 0;            /* žádný neviditelný okraj */
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translateY(-5px);  /* posun o 5px nahoru */
+  z-index: 2;
+}
+.tc__side--left  { left: 2px; }
+.tc__side--right { right: 2px; }
+
+.tc__sidetext{
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-weight: 900;
+  font-size: .88rem;            /* ponecháno */
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--c-primary);
+  text-shadow: 0 1px 2px rgba(0,0,0,.55);
+}
+
+/* jmenovka – pevně dole pod fotkou, vzhled jako grid/panely + žlutý lem */
+.tc__namewrap{
+  position:absolute; left:10px; right:10px; bottom:10px;
+  display:flex; justify-content:center;
+  min-width: 120px;
+  padding:.22rem .55rem;
+  border-radius:10px;
+
+  /* stejné barvy jako karty/panely */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+    var(--c-surface);
+
+  /* žluté lemování Bruins + jemný vnitřní lesk */
+  border: 1px solid var(--c-primary);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.04),
+    0 0 0 1px rgba(255,184,28,.25);
+
+  backdrop-filter: blur(2px);
+  z-index: 3;
+}
+
+/* text jména – menší a kompaktnější kvůli delším jménům */
+.tc__name{
+  color: var(--c-primary);
+  font-family: var(--ff-cond);
+  font-size: clamp(.92rem, 2.2vw, 1.15rem);
+  font-weight: 900;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(0,0,0,.55);
+}
+/* === Players: filtry jako žluté „pill“ tlačítka ======================= */
+.filters{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.filter__link{
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .9rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 900;
+  letter-spacing: .02em;
+
+  background: var(--c-primary);
+  color: #111;
+  border: 1px solid rgba(255,184,28,.7);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35);
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+
+.filter__link:hover{
+  filter: brightness(.98);
+  transform: translateY(-1px);
+}
+
+.filter__link.is-active{
+  background: var(--c-primary-600);
+  border-color: rgba(255,184,28,.9);
+  box-shadow: 0 8px 18px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.35);
+}
+
+.filter__count{
+  display: inline-block;
+  line-height: 1;
+  padding: .14rem .45rem;
+  border-radius: .75rem;
+  font-weight: 900;
+  font-size: .82em;
+
+  background: #111;
+  color: var(--c-primary);
+  border: 1px solid rgba(255,184,28,.45);
+}
+
+
+
+/* odkazy v gridu bez podtržení */
+.players-grid a.player-card--tc{ text-decoration:none; color:inherit; }
+
+/* --- větší trading karty v gridu, když obsahují .player-card--tc --- */
+.players-grid:has(.player-card--tc){
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+@media (max-width: 1200px){
+  .players-grid:has(.player-card--tc){
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  }
+}
+@media (max-width: 900px){
+  .players-grid:has(.player-card--tc){
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+}
+@media (max-width: 640px){
+  .players-grid:has(.player-card--tc){
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+/* === Player Card: jemný 3D tilt + parallax (opt-in přes .has-tilt) === */
+.player-card--tc.has-tilt{
+  perspective: 900px;                 /* jen pro tilt, bez vlivu na layout */
+}
+.player-card--tc.has-tilt .tc{
+  transform-style: preserve-3d;
+  transform-origin: 50% 60%;
+  transition: transform .25s cubic-bezier(.2,.6,.2,1);
+  will-change: transform;
+}
+.player-card--tc.has-tilt:hover .tc{
+  transform: rotateX(5deg) rotateY(-5deg); /* jemný náklon */
+}
+
+/* Parallax vrstvy – pouze transform, žádná změna velikostí/z-indexů */
+.player-card--tc.has-tilt .tc__frame{ transform: translateZ(0); }
+.player-card--tc.has-tilt .tc__photo{
+  transform: translateZ(14px);
+  transition: transform .25s ease;
+  will-change: transform;
+}
+/* Logo: jen pokud chceš, aby „plavalo“ blíž k uživateli */
+.player-card--tc.has-tilt .tc__logo{ transform: translateZ(18px); }
+.player-card--tc.has-tilt .tc__logo.tc__logo--sticker{ transform: translateZ(18px) rotate(8deg); }
+
+/* Respektování reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .player-card--tc.has-tilt .tc,
+  .player-card--tc.has-tilt .tc__photo,
+  .player-card--tc.has-tilt .tc__logo{ transition: none !important; transform: none !important; }
+}
+
+/* ——— Gloss sweep přes CELÝ povrch karty (opt-in: .has-gloss) ——— */
+.player-card--tc.has-gloss .tc{
+  position: relative; /* pro pseudo-element */
+  isolation: isolate; /* vlastní stacking context */
+}
+.player-card--tc.has-gloss .tc::after{
+  content:"";
+  position:absolute;
+  inset:-35% -25%;
+  border-radius: inherit;
+  background:
+    linear-gradient(75deg,
+      rgba(255,255,255,0) 35%,
+      rgba(255,255,255,.22) 46%,
+      rgba(255,255,255,.55) 50%,
+      rgba(255,255,255,.22) 54%,
+      rgba(255,255,255,0) 65%);
+  transform: translateX(-120%) rotate(10deg);
+  opacity: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 6; /* pod logem (7), nad fotkou/rámem */
+  will-change: transform, opacity;
+}
+.player-card--tc.has-gloss:hover .tc::after{
+  opacity: 1;
+  animation: tcCardGloss .9s cubic-bezier(.2,.6,.3,1) 0s 1 both;
+}
+@keyframes tcCardGloss{
+  from { transform: translateX(-120%) rotate(10deg); }
+  to   { transform: translateX(120%)  rotate(10deg); }
+}
+@media (prefers-reduced-motion: reduce){
+  .player-card--tc.has-gloss .tc::after{ animation: none !important; opacity: 0 !important; }
+}
+
+/* ——— FOIL jen pro jmenovku ——— */
+.player-card--tc .tc__namewrap.is-foil-name{
+  isolation: isolate;
+  overflow: hidden;
+  position: absolute;
+}
+.player-card--tc .tc__namewrap.is-foil-name::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius: inherit;
+  pointer-events:none;
+  mix-blend-mode: screen;
+  opacity:.45;
+  z-index: 0;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,184,28,.22), rgba(255,184,28,0) 60%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,.08) 0 2px, rgba(255,255,255,0) 2px 7px),
+    conic-gradient(from 0deg at 50% 50%,
+      rgba(255,184,28,.22),
+      rgba(255,255,255,.06),
+      rgba(255,184,28,.30),
+      rgba(255,255,255,.06),
+      rgba(255,184,28,.22));
+  background-size: 100% 100%, 220% 220%, 160% 160%;
+  background-position: 50% 0%, 0% 0%, 50% 50%;
+  animation: nameFoilSweep 3.6s ease-in-out infinite alternate,
+             nameFoilSpin 10s linear infinite;
+}
+.player-card--tc .tc__namewrap.is-foil-name .tc__name{
+  position: relative;
+  z-index: 1;
+}
+@keyframes nameFoilSweep{
+  0%   { background-position: 50% 0%,   0%   0%, 50% 50%; }
+  100% { background-position: 50% 0%, 100% 100%, 50% 50%; }
+}
+@keyframes nameFoilSpin{
+  0%   { filter: hue-rotate(0deg)   saturate(1.05); }
+  100% { filter: hue-rotate(360deg) saturate(1.05); }
+}
+@media (prefers-reduced-motion: reduce){
+  .player-card--tc .tc__namewrap.is-foil-name::before{
+    animation: none !important;
+  }
+}
+/* === Players: filtry – tmavé tlačítko, žlutý lem i text, radius jako NAV === */
+.filters{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.filter__link{
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .9rem;
+  border-radius: var(--nav-pill-radius);        /* stejné zaoblení jako nav */
+  text-decoration: none;
+  font-weight: 900;
+  letter-spacing: .02em;
+
+  background: var(--c-surface);                 /* stejné jako grid/panely */
+  color: var(--c-primary);                      /* žlutý text */
+  border: 1px solid var(--c-primary);           /* žlutý lem */
+  box-shadow: 0 6px 16px rgba(0,0,0,.35),
+              inset 0 1px 0 rgba(255,255,255,.04);
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+
+.filter__link:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+    var(--c-surface);
+}
+
+.filter__link.is-active{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)),
+    var(--c-surface);
+  box-shadow: 0 8px 18px rgba(0,0,0,.4),
+              0 0 0 1px rgba(255,184,28,.35) inset;
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+
+.filter__count{
+  display: inline-block;
+  line-height: 1;
+  padding: .14rem .45rem;
+  border-radius: calc(var(--nav-pill-radius) - 2px); /* sladěné s nav */
+  font-weight: 900;
+  font-size: .82em;
+
+  background: transparent;
+  color: var(--c-primary);
+  border: 1px solid rgba(255,184,28,.45);
 }

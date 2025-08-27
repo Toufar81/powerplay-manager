@@ -4,6 +4,14 @@
     <div class="ngrid">
       <div class="strip__title">POSLEDNÍ <span>MATCH</span></div>
 
+      {# Clickable overlay for whole strip (if URL available) #}
+      {% if latest and detail_url %}
+        <a class="link-overlay"
+           href="{{ detail_url }}"
+           aria-label="Detail zápasu: {{ home.name }} vs {{ away.name }}, {{ latest.datetime|date:'j. n. Y' }}">
+        </a>
+      {% endif %}
+
       {% if latest %}
         <!-- HOME vlevo -->
         <div class="team-card team-card--left {% if home.is_us %}is-us{% endif %}">

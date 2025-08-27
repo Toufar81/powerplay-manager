@@ -1,0 +1,258 @@
+{# file: powerplay_app/templates/site/game_detail.html #}
+{% extends "site/base.html" %}
+{% load static %}
+
+{% block title %}{{ game.home_team.name }} vs {{ game.away_team.name }} | PowerPlay{% endblock %}
+
+{% block content %}
+
+{# ===== HLAVIČKA ===== #}
+<section class="strip strip--next-game" aria-label="Detail zápasu">
+  <div class="strip__inner ngrid">
+    <h2 class="strip__title" aria-hidden="true">
+      {% if is_future %}NEJBLÍŽŠÍ{% else %}ZÁPAS{% endif %} <span>MATCH</span>
+    </h2>
+
+    <div class="team-card team-card--left {% if home_is_us %}is-us{% endif %}">
+      <div class="team-card__inner">
+        {% if game.home_team.logo %}
+          <img class="team-card__logo" src="{{ game.home_team.logo.url }}" alt="" loading="eager" decoding="async">
+        {% endif %}
+        <div class="team-card__text">
+          <div class="team-card__name">{{ game.home_team.name }}</div>
+          {% if game.home_team.city %}<div class="team-card__meta">{{ game.home_team.city }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="midcol">
+      <div class="midcol__date">{{ game.starts_at|date:'j. n. Y' }}</div>
+      {% if is_future %}
+        <div class="midcol__time">{{ game.starts_at|date:'H:i' }}</div>
+      {% else %}
+        <div class="midcol__time">{{ game.score_home }} : {{ game.score_away }}</div>
+      {% endif %}
+      <div class="midcol__meta">
+        {{ competition_label }}
+        {% if game.stadium %}
+          •
+          {% if game.stadium.map_url %}
+            <a class="link" href="{{ game.stadium.map_url }}" target="_blank" rel="noopener">{{ game.stadium.name }}</a>
+          {% else %}
+            {{ game.stadium.name }}
+          {% endif %}
+        {% elif game.home_team.stadium %}
+          • {{ game.home_team.stadium.name }}
+        {% endif %}
+        {% if game.home_team.city %} • {{ game.home_team.city }}{% endif %}
+      </div>
+      {% if admin_change_url %}
+        <div style="margin-top:.5rem"><a class="btn" href="{{ admin_change_url }}">Otevřít v adminu</a></div>
+      {% endif %}
+    </div>
+
+    <div class="team-card team-card--right {% if away_is_us %}is-us{% endif %}">
+      <div class="team-card__inner">
+        <div class="team-card__text team-card__text--right">
+          <div class="team-card__name">{{ game.away_team.name }}</div>
+          {% if game.away_team.city %}<div class="team-card__meta">{{ game.away_team.city }}</div>{% endif %}
+        </div>
+        {% if game.away_team.logo %}
+          <img class="team-card__logo" src="{{ game.away_team.logo.url }}" alt="" loading="eager" decoding="async">
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ===== ZÁPIS ===== #}
+{% if has_any_events %}
+  <div class="container section">
+    <div class="section__head"><h3 class="section__title">Zápis – Góly &amp; tresty</h3></div>
+
+    {% if show_home_col and show_away_col %}
+      <div class="events">
+    {% elif show_home_col %}
+      <div class="events events--home-only">
+    {% else %}
+      <div class="events events--away-only">
+    {% endif %}
+
+      {% if show_home_col %}
+        <div class="events__col">
+          <div class="events__team">{{ game.home_team.name }}</div>
+          {% if goals_home %}
+            <div class="events__block">
+              <div class="events__blocktitle">Góly</div>
+              <ul class="events__list">
+                {% for g in goals_home %}
+                  <li class="events__item">
+                    <span class="events__badge">P{{ g.period }}</span>
+                    <span class="events__time">{{ g.clock }}</span>
+                    <a class="events__strong" href="{% url 'site:player_detail' pk=g.scorer.pk %}">
+                      {% if g.scorer.jersey_number %}#{{ g.scorer.jersey_number }} {% endif %}
+                      {{ g.scorer.nickname|default:g.scorer.last_name }}
+                    </a>
+                    {% if g.assist_1 or g.assist_2 %}
+                      <span class="events__assist">
+                        (A:
+                        {% if g.assist_1 %}
+                          <a href="{% url 'site:player_detail' pk=g.assist_1.pk %}">
+                            {% if g.assist_1.jersey_number %}#{{ g.assist_1.jersey_number }} {% endif %}
+                            {{ g.assist_1.nickname|default:g.assist_1.last_name }}
+                          </a>
+                        {% endif %}
+                        {% if g.assist_1 and g.assist_2 %}, {% endif %}
+                        {% if g.assist_2 %}
+                          <a href="{% url 'site:player_detail' pk=g.assist_2.pk %}">
+                            {% if g.assist_2.jersey_number %}#{{ g.assist_2.jersey_number }} {% endif %}
+                            {{ g.assist_2.nickname|default:g.assist_2.last_name }}
+                          </a>
+                        {% endif %}
+                        )
+                      </span>
+                    {% endif %}
+                    <span class="events__tag">{{ g.get_strength_display }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if pens_home %}
+            <div class="events__block mt-2">
+              <div class="events__blocktitle">Tresty</div>
+              <ul class="events__list">
+                {% for p in pens_home %}
+                  <li class="events__item">
+                    <span class="events__badge">P{{ p.period }}</span>
+                    <span class="events__time">{{ p.clock }}</span>
+                    <a class="events__strong" href="{% url 'site:player_detail' pk=p.penalized_player.pk %}">
+                      {% if p.penalized_player.jersey_number %}#{{ p.penalized_player.jersey_number }} {% endif %}
+                      {{ p.penalized_player.nickname|default:p.penalized_player.last_name }}
+                    </a>
+                    <span class="events__muted">— {{ p.minutes }} min · {{ p.get_penalty_type_display }}{% if p.reason %} · {{ p.reason }}{% endif %}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if show_away_col %}
+        <div class="events__col">
+          <div class="events__team events__team--right">{{ game.away_team.name }}</div>
+
+          {% if goals_away %}
+            <div class="events__block">
+              <div class="events__blocktitle">Góly</div>
+              <ul class="events__list">
+                {% for g in goals_away %}
+                  <li class="events__item">
+                    <span class="events__badge">P{{ g.period }}</span>
+                    <span class="events__time">{{ g.clock }}</span>
+                    <a class="events__strong" href="{% url 'site:player_detail' pk=g.scorer.pk %}">
+                      {% if g.scorer.jersey_number %}#{{ g.scorer.jersey_number }} {% endif %}
+                      {{ g.scorer.nickname|default:g.scorer.last_name }}
+                    </a>
+                    {% if g.assist_1 or g.assist_2 %}
+                      <span class="events__assist">
+                        (A:
+                        {% if g.assist_1 %}
+                          <a href="{% url 'site:player_detail' pk=g.assist_1.pk %}">
+                            {% if g.assist_1.jersey_number %}#{{ g.assist_1.jersey_number }} {% endif %}
+                            {{ g.assist_1.nickname|default:g.assist_1.last_name }}
+                          </a>
+                        {% endif %}
+                        {% if g.assist_1 and g.assist_2 %}, {% endif %}
+                        {% if g.assist_2 %}
+                          <a href="{% url 'site:player_detail' pk=g.assist_2.pk %}">
+                            {% if g.assist_2.jersey_number %}#{{ g.assist_2.jersey_number }} {% endif %}
+                            {{ g.assist_2.nickname|default:g.assist_2.last_name }}
+                          </a>
+                        {% endif %}
+                        )
+                      </span>
+                    {% endif %}
+                    <span class="events__tag">{{ g.get_strength_display }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if pens_away %}
+            <div class="events__block mt-2">
+              <div class="events__blocktitle">Tresty</div>
+              <ul class="events__list">
+                {% for p in pens_away %}
+                  <li class="events__item">
+                    <span class="events__badge">P{{ p.period }}</span>
+                    <span class="events__time">{{ p.clock }}</span>
+                    <a class="events__strong" href="{% url 'site:player_detail' pk=p.penalized_player.pk %}">
+                      {% if p.penalized_player.jersey_number %}#{{ p.penalized_player.jersey_number }} {% endif %}
+                      {{ p.penalized_player.nickname|default:p.penalized_player.last_name }}
+                    </a>
+                    <span class="events__muted">— {{ p.minutes }} min · {{ p.get_penalty_type_display }}{% if p.reason %} · {{ p.reason }}{% endif %}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{# ===== LAJNY ===== #}
+{% if rink_lines %}
+  <div class="container section">
+    <div class="section__head"><h3 class="section__title">Lajny – {{ PRIMARY_TEAM_NAME }}</h3></div>
+
+    {% for ln in rink_lines %}
+      <div class="card mt-2">
+        <div class="card__title">Lajna {{ ln.number }}</div>
+        <div class="rink" style="--rink-img: url('{% static 'site/img/ring.png' %}');">
+          <div class="rink__pos pos-LW">{% include "site/_partials/player_chip.html" with player=ln.slots.LW %}</div>
+          <div class="rink__pos pos-C">{% include "site/_partials/player_chip.html" with player=ln.slots.C %}</div>
+          <div class="rink__pos pos-RW">{% include "site/_partials/player_chip.html" with player=ln.slots.RW %}</div>
+          <div class="rink__pos pos-LD">{% include "site/_partials/player_chip.html" with player=ln.slots.LD %}</div>
+          <div class="rink__pos pos-RD">{% include "site/_partials/player_chip.html" with player=ln.slots.RD %}</div>
+          <div class="rink__pos pos-G">{% include "site/_partials/player_chip.html" with player=primary_goalie %}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{# ===== STADION (nové) ===== #}
+{% with stadium=game.stadium|default:game.home_team.stadium %}
+{% if stadium %}
+  <div class="container section">
+    <div class="card mt-2">
+      <div class="card__title">Stadion</div>
+      <div class="stadium">
+        <div class="stadium__info">
+          <div class="stadium__name">{{ stadium.name }}</div>
+          {% if stadium.address %}<div class="stadium__addr">{{ stadium.address }}</div>{% endif %}
+          {% if stadium.map_url %}
+            <a class="link" href="{{ stadium.map_url }}" target="_blank" rel="noopener">Otevřít mapu</a>
+          {% endif %}
+        </div>
+        {% if stadium.embed_url %}
+          <iframe class="stadium__map"
+                  src="{{ stadium.embed_url }}"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen>
+          </iframe>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endwith %}
+
+{% endblock %}

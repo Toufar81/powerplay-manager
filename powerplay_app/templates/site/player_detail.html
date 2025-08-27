@@ -1,51 +1,91 @@
 {% extends "site/base.html" %}
+{% load static %}
 
 {% block title %}{{ player.first_name }} {{ player.last_name }} | Hráči | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
 {% block crumbs %}Domů / <a href="{% url 'site:players' %}" class="link">Hráči</a> / {{ player.first_name }} {{ player.last_name }}{% endblock %}
 
+{# stránkový CSS jen pro detail hráče – scope .p-player #}
+{% block head_extra %}
+<style>
+  .p-player .player-hero{padding:clamp(1.4rem,3vw,2.2rem) 0;border-bottom:1px solid var(--c-border);background:
+    radial-gradient(700px 300px at 90% 0%, rgba(255,209,0,.08), transparent 60%),
+    radial-gradient(600px 250px at 10% 0%, rgba(255,209,0,.12), transparent 60%);}
+  .p-player .player-hero__inner{display:grid;grid-template-columns:200px 1fr;gap:1rem;align-items:center;}
+  .p-player .player-hero__photo{width:200px;height:200px;object-fit:cover;border-radius:18px;background:#0d1117;border:1px solid var(--c-primary);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,184,28,.28);}
+  .p-player .player-hero__top{display:flex;align-items:baseline;gap:.65rem;}
+  .p-player .player-hero__name{margin:0;font-family:var(--ff-cond);font-weight:900;font-size:clamp(1.6rem,4vw,2.4rem);}
+  .p-player .player-hero__meta{display:flex;align-items:center;gap:.5rem;margin-top:.25rem;}
+  .p-player .player-hero__meta .dot{width:4px;height:4px;background:var(--c-border);border-radius:999px;}
+  .p-player .player-hero__contacts{margin-top:.35rem;display:flex;align-items:center;gap:.5rem;}
+  .p-player .player-hero__actions{margin-top:.6rem;display:flex;gap:.5rem;flex-wrap:wrap;}
+  .p-player .pill{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:var(--nav-pill-radius);text-decoration:none;font-weight:900;letter-spacing:.02em;background:var(--c-surface);color:var(--c-primary);border:1px solid var(--c-primary);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .08s ease,filter .12s ease,box-shadow .12s ease;}
+  .p-player .pill:hover{transform:translateY(-1px);filter:brightness(1.02);}
+  .p-player .jersey{display:inline-flex;align-items:center;padding:.25rem .65rem;border-radius:999px;background:var(--c-surface);border:1px solid var(--c-primary);color:var(--c-primary);font-weight:900;letter-spacing:.02em;box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);}
+  .p-player .jersey--xl{font-size:clamp(1rem,2.4vw,1.2rem);}
+  .p-player .badge{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:999px;background:var(--c-surface);border:1px solid var(--c-primary);color:var(--c-primary);font-weight:900;letter-spacing:.02em;font-size:.92rem;}
+  @media (max-width:720px){.p-player .player-hero__inner{grid-template-columns:1fr}.p-player .player-hero__photo{width:160px;height:160px}}
+
+  /* Player detail only */
+  .p-player .player-hero__photo{
+    width: clamp(180px, 22vw, 240px);
+    height: clamp(180px, 22vw, 240px);
+    object-fit: contain;            /* zobrazit CELÉ */
+    object-position: 50% 50%;
+    background: rgba(255,255,255,.06);  /* „podklad“ za případné pruhy */
+    padding: 4px;                      /* tenký vnitřní rámeček (volitelné) */
+    border: 1px solid var(--c-border); /* aby to ladilo s panelem */
+  }
+
+  @media (max-width: 720px){
+    .p-player .player-hero__photo{ width: 180px; height: 180px; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="player-hero">
-  <div class="container player-hero__inner">
-    <div class="player-hero__media">
-      <img class="player-hero__photo" src="{{ player.photo_url }}" alt="{{ player.first_name }} {{ player.last_name }}" width="240" height="240" />
+<div class="p-player">
+  <section class="player-hero">
+    <div class="container player-hero__inner">
+      <div class="player-hero__media">
+        <img class="player-hero__photo" src="{{ player.photo_url }}" alt="{{ player.first_name }} {{ player.last_name }}" width="240" height="240">
+      </div>
+      <div class="player-hero__body">
+        <div class="player-hero__top">
+          {% if player.jersey_number %}<span class="jersey jersey--xl">#{{ player.jersey_number }}</span>{% endif %}
+          <h1 class="player-hero__name">{{ player.first_name }} {{ player.last_name }}</h1>
+        </div>
+        <div class="player-hero__meta">
+          <span class="badge">{{ player.get_position_display }}</span>
+          {% if age %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ age }} let</span>{% endif %}
+          {% if player.country %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ player.country.name }}</span>{% endif %}
+        </div>
+        <div class="player-hero__contacts">
+          {% if player.email %}<a class="link" href="mailto:{{ player.email }}">{{ player.email }}</a>{% endif %}
+          {% if player.phone %}{% if player.email %}<span class="dot" aria-hidden="true"></span>{% endif %}<a class="link" href="tel:{{ player.phone|cut:" " }}">{{ player.phone }}</a>{% endif %}
+        </div>
+        <div class="player-hero__actions">
+          <a class="pill" href="{% url 'site:players' %}#player-{{ player.id }}">Zobrazit kartu</a>
+          {% if player.email %}<a class="pill" href="mailto:{{ player.email }}">Napsat</a>{% endif %}
+        </div>
+      </div>
     </div>
-    <div class="player-hero__body">
-      <div class="player-hero__top">
-        {% if player.jersey_number %}<span class="jersey jersey--xl">#{{ player.jersey_number }}</span>{% endif %}
-        <h1 class="player-hero__name">{{ player.first_name }} {{ player.last_name }}</h1>
-      </div>
-      <div class="player-hero__meta">
-        <span class="badge">{{ player.get_position_display }}</span>
-        {% if age %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ age }} let</span>{% endif %}
-        {% if player.country %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ player.country.name }}</span>{% endif %}
-      </div>
-      <div class="player-hero__contacts">
-        {% if player.email %}<a class="link" href="mailto:{{ player.email }}">{{ player.email }}</a>{% endif %}
-        {% if player.phone %}
-          {% if player.email %}<span class="dot" aria-hidden="true"></span>{% endif %}
-          <a class="link" href="tel:{{ player.phone|cut:" " }}">{{ player.phone }}</a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<section class="section">
-  <div class="container">
-    <h2 class="section__title">Informace</h2>
-    <div class="info-grid mt-2">
-      <div class="info-row"><span class="info-k">Pozice</span><span class="info-v">{{ player.get_position_display }}</span></div>
-      <div class="info-row"><span class="info-k">Číslo dresu</span><span class="info-v">{% if player.jersey_number %}#{{ player.jersey_number }}{% else %}—{% endif %}</span></div>
-      <div class="info-row"><span class="info-k">Tým</span><span class="info-v">{% if player.team %}{{ player.team.name }}{% else %}—{% endif %}</span></div>
-      <div class="info-row"><span class="info-k">Město</span><span class="info-v">{% if player.team and player.team.city %}{{ player.team.city }}{% else %}—{% endif %}</span></div>
-      <div class="info-row"><span class="info-k">Datum narození</span><span class="info-v">{% if player.birth_date %}{{ player.birth_date|date:'j. n. Y' }}{% else %}—{% endif %}</span></div>
+  <section class="section">
+    <div class="container">
+      <h2 class="section__title">Informace</h2>
+      <div class="info-grid mt-2">
+        <div class="info-row"><span class="info-k">Pozice</span><span class="info-v">{{ player.get_position_display }}</span></div>
+        <div class="info-row"><span class="info-k">Číslo dresu</span><span class="info-v">{% if player.jersey_number %}#{{ player.jersey_number }}{% else %}—{% endif %}</span></div>
+        <div class="info-row"><span class="info-k">Tým</span><span class="info-v">{% if player.team %}{{ player.team.name }}{% else %}—{% endif %}</span></div>
+        <div class="info-row"><span class="info-k">Město</span><span class="info-v">{% if player.team and player.team.city %}{{ player.team.city }}{% else %}—{% endif %}</span></div>
+        <div class="info-row"><span class="info-k">Datum narození</span><span class="info-v">{% if player.birth_date %}{{ player.birth_date|date:'j. n. Y' }}{% else %}—{% endif %}</span></div>
+      </div>
+      <div class="mt-4">
+        <h2 class="section__title">Statistiky (sezóna)</h2>
+        <p class="muted">Přidáme v dalším kroku.</p>
+      </div>
     </div>
-
-    {# Rezervované místo pro budoucí statistiky #}
-    <div class="mt-4">
-      <h2 class="section__title">Statistiky (sezóna)</h2>
-      <p class="muted">Přidáme v dalším kroku.</p>
-    </div>
-  </div>
-</section>
+  </section>
+</div>
 {% endblock %}

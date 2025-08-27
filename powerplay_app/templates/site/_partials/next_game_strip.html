@@ -3,6 +3,14 @@
   <div class="strip__inner ngrid">
     <h2 class="strip__title" aria-hidden="true">NEJBLÍŽŠÍ <span>MATCH</span></h2>
 
+    {# Clickable overlay for whole strip (if URL available) #}
+    {% if next_game and detail_url %}
+      <a class="link-overlay"
+         href="{{ detail_url }}"
+         aria-label="Detail zápasu: {{ home.name }} vs {{ away.name }}, {{ next_game.datetime|date:'j. n. Y H:i' }}">
+      </a>
+    {% endif %}
+
     {% if next_game %}
       {# ==== LEFT: HOME TEAM ==== #}
       <div class="team-card team-card--left {% if home.is_us %}is-us{% endif %}">

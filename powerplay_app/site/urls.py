@@ -27,7 +27,9 @@ from .views.league import LeagueView
 from .views.players import PlayersListView, PlayerDetailView
 from .views.staff import StaffListView, StaffDetailView
 from .views.contact import ContactView
-from .views.auth import SiteLoginView, SiteLogoutView  # custom authentication views
+from .views.auth import SiteLoginView, SiteLogoutView
+from .views.game_detail import GameDetailView
+
 
 
 app_name = "site"
@@ -56,4 +58,6 @@ urlpatterns: list[URLPattern] = [
 
     # Kontakt
     path("kontakt/", ContactView.as_view(), name="contact"),
+
+    path("zapas/<int:pk>/<slug:slug>/", GameDetailView.as_view(), name="game_detail"),
 ]

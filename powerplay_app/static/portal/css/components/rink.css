@@ -1,0 +1,50 @@
+/* === PowerPlay – Rink layout & player chip (samostatný modul) === */
+
+/* Plátno hřiště */
+.rink{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  background:
+    var(--rink-img, none) center/contain no-repeat,
+    rgba(255,255,255,.04);
+  overflow: hidden;
+  margin-top: .6rem;
+}
+
+/* Absolutní pozice postů – jemně dolaď dle potřeby */
+.rink__pos{ position: absolute; transform: translate(-50%, -50%); }
+.pos-LW{ left: 25%; top: 34%; }
+.pos-C { left: 50%; top: 28%; }
+.pos-RW{ left: 75%; top: 34%; }
+.pos-LD{ left: 38%; top: 66%; }
+.pos-RD{ left: 62%; top: 66%; }
+.pos-G { left: 50%; top: 88%; }
+
+/* Badge hráče */
+.chip{
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  padding: .35rem .6rem;
+  box-shadow: var(--shadow);
+  font-weight: 800;
+}
+.chip__photo{
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: rgba(255,255,255,.12);
+}
+.chip--empty{ opacity: .55; font-weight: 700; }
+
+@media (max-width: 720px){
+  .chip{ padding: .3rem .5rem; font-size: .95rem; }
+  .chip__photo{ width: 24px; height: 24px; }
+}

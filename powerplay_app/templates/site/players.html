@@ -1,3 +1,4 @@
+{# file: powerplay_app/templates/site/players.html #}
 {% extends "site/base.html" %}
 
 {% block title %}Hráči | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
@@ -6,14 +7,15 @@
 {% block content %}
 <section class="section">
   <div class="container">
-    <h1 class="section__title">Hráči</h1>
+    {# Nadpis necháme jen pro a11y, vizuálně skrytý #}
+    <h1 class="sr-only">Hráči</h1>
 
     <div class="filters mt-2" role="tablist" aria-label="Filtr pozic">
-      {# All #}
+      {# Všichni #}
       <a class="filter__link {% if not selected_pos %}is-active{% endif %}" href="{% url 'site:players' %}">
         Všichni <span class="filter__count">{{ total_count }}</span>
       </a>
-      {# Per position #}
+      {# Podle pozice #}
       {% for it in pos_list %}
         <a class="filter__link {% if selected_pos == it.key %}is-active{% endif %}" href="{% url 'site:players' %}?pos={{ it.key }}">
           {{ it.label }} <span class="filter__count">{{ it.count }}</span>
@@ -24,21 +26,7 @@
     {% if players %}
       <div class="players-grid mt-4">
         {% for p in players %}
-          <a href="{% url 'site:player_detail' p.id %}" class="player-card" aria-label="Detail hráče {{ p.first_name }} {{ p.last_name }}">
-            <div class="player-card__media">
-              <img class="player-card__photo" src="{{ p.photo_url }}" alt="{{ p.first_name }} {{ p.last_name }}" loading="lazy" decoding="async" width="160" height="160" />
-            </div>
-            <div class="player-card__body">
-              <div class="player-card__top">
-                {% if p.jersey_number %}<span class="jersey">#{{ p.jersey_number }}</span>{% endif %}
-                <h3 class="player-card__name">{{ p.first_name }} {{ p.last_name }}</h3>
-              </div>
-              <div class="player-card__meta">
-                <span class="badge">{{ p.get_position_display }}</span>
-                {% if p.nickname %}<span class="dot" aria-hidden="true"></span><span class="muted">"{{ p.nickname }}"</span>{% endif %}
-              </div>
-            </div>
-          </a>
+          {% include "site/_partials/player_trading_card.html" with player=p %}
         {% endfor %}
       </div>
     {% else %}
