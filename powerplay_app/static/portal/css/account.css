@@ -1,0 +1,116 @@
+/* === Portal › Account (scoped) ========================================= */
+/* Vše pod .p-account, aby se nic mimo stránku účtu nezměnilo. */
+
+.p-account .card__title{
+  margin: 0 0 .25rem 0;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+/* Django {{ form.as_p }} – každý <p> = jeden field */
+.p-account form p{
+  margin: 0 0 .65rem 0;
+  display: grid;
+  gap: .28rem;
+}
+
+/* Štítky */
+.p-account form p > label{
+  font-weight: 800;
+  opacity: .95;
+}
+
+/* Vstupy (text/email/password), selecty a textarea – tmavé panely portálu */
+.p-account input[type="text"],
+.p-account input[type="email"],
+.p-account input[type="password"],
+.p-account select,
+.p-account textarea{
+  width: 100%;
+  color: var(--c-text);
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: .5rem .65rem;
+  outline: none;
+  transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+/* Focus – žlutý ring jako na ostatních stránkách */
+.p-account input[type="text"]:focus,
+.p-account input[type="email"]:focus,
+.p-account input[type="password"]:focus,
+.p-account select:focus,
+.p-account textarea:focus{
+  border-color: var(--c-primary);
+  box-shadow:
+    0 0 0 1px rgba(255,184,28,.35) inset,
+    0 0 0 2px rgba(255,184,28,.10);
+  background: rgba(255,255,255,.08);
+}
+
+/* Placeholder & disabled kontrast */
+.p-account ::placeholder{ opacity: .6; }
+.p-account :disabled{
+  opacity: .8;
+  cursor: not-allowed;
+}
+
+/* Help text (např. pravidla hesla) */
+.p-account .helptext{
+  font-size: .9rem;
+  color: var(--c-muted);
+}
+.p-account .helptext ul{
+  padding-left: 1rem;
+  margin: .25rem 0 0;
+}
+
+/* Chybové hlášky u polí (ul.errorlist) – jemný panel */
+.p-account ul.errorlist{
+  margin: .25rem 0 0;
+  padding: .35rem .6rem;
+  list-style: none;
+  border: 1px solid rgba(239,68,68,.55);
+  background: rgba(239,68,68,.08);
+  color: #fca5a5;
+  border-radius: 8px;
+  font-size: .9rem;
+}
+.p-account ul.errorlist li{ margin:0; }
+
+/* Globální flash vložená v šabloně (class="flash__item error") – sjednocení */
+.p-account .flash__item.error{
+  border-color:#842029;
+  background:#2c0b0e;
+  color:#f8d7da;
+  border-radius: 10px;
+}
+
+/* Jemné sjednocení mezer mezi kartami */
+@media (min-width: 820px){
+  .p-account .mt-4{ margin-top: 1.1rem; }
+}
+
+/* Volitelné: užší textarea na mobilu, aby nepřetékal form layout */
+@media (max-width: 480px){
+  .p-account textarea{ min-height: 120px; }
+}
+/* statický údaj ve stylu inputu */
+.p-account .static-field{
+  display: block;
+  width: 100%;
+  padding: .5rem .65rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  user-select: text;
+  cursor: default;
+}
+/* Zvýraznění jména a příjmení (read-only) žlutě */
+.p-account .static-field{
+  color: var(--c-primary);
+  font-weight: 700;
+}
+

@@ -1,10 +1,15 @@
 {% extends "site/base.html" %}
+{% load static %}
+
 {% block title %}Přihlášení | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
 {% block crumbs %}Domů / Přihlášení{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'site/css/login.css' %}">
+{% endblock %}
 
 {% block content %}
-<section class="section">
-  <div class="container" style="max-width:520px">
+<section class="section p-login">
+  <div class="container login-container">
     <h1 class="section__title">Přihlášení</h1>
 
     {% if form.errors %}
@@ -13,16 +18,30 @@
       </div>
     {% endif %}
 
-    <div class="card mt-2">
+    <div class="card mt-2 login-card">
+      <!-- Logo týmu v levém horním rohu karty -->
+      <div class="login-card__logo">
+        {% if primary_team %}
+          {% firstof primary_team.logo.url primary_team.crest.url primary_team.badge.url primary_team.image.url as logo_url %}
+          {% if logo_url %}
+            <img src="{{ logo_url }}" alt="{{ primary_team.name }}">
+          {% else %}
+            <span class="login-card__logo-fallback">{{ primary_team.name|default:"Tým"|slice:":1" }}</span>
+          {% endif %}
+        {% else %}
+          <img src="{% static 'site/img/default_team.png' %}" alt="Team">
+        {% endif %}
+      </div>
+
       <form method="post" action="">
         {% csrf_token %}
-        <div style="display:grid; gap:.75rem">
-          <label>
-            <div class="muted">E-mail nebo uživatelské jméno</div>
+        <div class="login-form">
+          <label class="login-field">
+            <span class="muted">E-mail nebo uživatelské jméno</span>
             {{ form.username }}
           </label>
-          <label>
-            <div class="muted">Heslo</div>
+          <label class="login-field">
+            <span class="muted">Heslo</span>
             {{ form.password }}
           </label>
           {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}

@@ -1,0 +1,133 @@
+/* === Portal › Wallet (Pokladna) — scoped styles ======================== */
+/* Vše pod .p-wallet, aby se nic mimo pokladnu nezměnilo. */
+
+/* — Sticky lišta s filtrem (stejná logika jako u Kalendáře) — */
+.p-wallet{ --filters-h: 56px; }
+@media (max-width: 720px){ .p-wallet{ --filters-h: 64px; } }
+
+.p-wallet .filters-bar{
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 1010;
+  background: rgba(10,13,16,.75);
+  backdrop-filter: saturate(120%) blur(6px);
+  border-bottom: 1px solid var(--c-border);
+
+  /* underlap: obsah podjedu pod lištu, první karta si přidá padding-top */
+  margin-bottom: calc(var(--filters-h) * -1);
+}
+.p-wallet .filters-scroll{
+  position: relative;
+  overflow-x: auto;
+  padding: .35rem 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.p-wallet .filters-scroll::-webkit-scrollbar{ display:none; }
+
+/* karta s filtrem v liště – jen jemné sladění vzhledu */
+.p-wallet .filters-bar .card{
+  margin: 0;
+  padding: .45rem .75rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+}
+.p-wallet .filters-bar label{ font-weight:700; opacity:.92; margin-right:.35rem; }
+.p-wallet .filters-bar select{
+  appearance: none;
+  background:#0e1216;
+  border:1px solid var(--c-border);
+  border-radius:10px;
+  color:var(--c-text);
+  padding:.38rem .55rem;
+}
+.p-wallet .filters-bar .btn{ padding:.45rem .8rem; }
+
+/* první karta pod lištou dostane odsazení nahoru (underlap efekt) */
+.p-wallet .filters-bar + .card,
+.p-wallet .filters-bar + .wallet-summary{
+  padding-top: var(--filters-h);
+}
+
+/* — Souhrny (KPI) — kompaktní „chipsy“ + zvýrazněný celkový zůstatek — */
+.p-wallet .wallet-summary{ display:grid; gap:.45rem; }
+.p-wallet .wallet-summary > div{
+  display:flex; justify-content:space-between; align-items:center; gap:.75rem;
+  padding:.5rem .75rem;
+  border-radius:12px;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  font-weight:800;
+}
+.p-wallet .wallet-summary > div strong{ font-weight:900; opacity:.95; }
+.p-wallet .wallet-summary hr{
+  border:0; height:1px; margin:.35rem 0;
+  background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,0.02));
+}
+.p-wallet .wallet-summary > div:last-child{
+  border-color: rgba(255,184,28,.45);
+  box-shadow: 0 0 0 1px rgba(255,184,28,.25) inset;
+}
+
+/* — TOP kategorie — drobné sjednocení řádků — */
+.p-wallet .grid .card ul.clean-list li{
+  padding:.35rem 0;
+  border-top:1px solid var(--c-border);
+}
+
+/* — Ledger (seznam položek) — karty se separací a hover affordance — */
+.p-wallet .ledger{ display:grid; gap:.45rem; }
+
+.p-wallet .ledger > li{
+  position: relative;
+  border-radius: 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);   /* kolem dokola */
+  /* inline styl šablony zanechává i border-top: var(--c-border) → nevadí */
+  box-shadow: 0 1px 0 rgba(0,0,0,.35);
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease, filter .12s ease;
+}
+
+/* zlatý „hairline“ na horní hraně při hoveru (nepřepisuje inline border-top) */
+.p-wallet .ledger > li::before{
+  content:"";
+  position:absolute; left:12px; right:12px; top:-1px; height:2px;
+  background: linear-gradient(90deg, rgba(255,184,28,0), rgba(255,184,28,.7), rgba(255,184,28,0));
+  opacity: 0; transition: opacity .12s ease;
+}
+
+.p-wallet .ledger > li:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,184,28,.35);
+  box-shadow: 0 8px 18px rgba(0,0,0,.38);
+  filter: brightness(1.02);
+}
+.p-wallet .ledger > li:hover::before{ opacity:.85; }
+
+/* typografie sloupců (nepřidáváme třídy na řádky) */
+.p-wallet .ledger > li > :nth-child(1){ opacity:.8; }
+.p-wallet .ledger > li > :nth-child(3){
+  text-align:right;
+  font-weight:900;
+  font-variant-numeric: tabular-nums;
+}
+/* ===== Portál › Pokladna (scoped) ===== */
+.p-wallet { --filters-h: 44px; }
+@media (max-width: 720px){ .p-wallet { --filters-h: 54px; } }
+
+/* Sticky bar drží filtr pod hlavním navem */
+.p-wallet .filters-bar{
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 1010;
+  background: rgba(10,13,16,.75);
+  backdrop-filter: saturate(120%) blur(6px);
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: calc(var(--filters-h) * -1); /* underlap */
+}
+.p-wallet .filters-scroll{ padding: .35rem 0; }
+
+/* První panel pod lištou odskočí dolů o výšku lišty */
+.p-wallet .filters-bar + .wallet-summary,
+.p-wallet .filters-bar + .card{ padding-top: var(--filters-h); }

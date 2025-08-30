@@ -1,0 +1,65 @@
+/* === Portal › Připomínky (scoped) ======================================= */
+/* Vše je pod .p-feedback, aby se nic mimo tuto stránku nezměnilo. */
+
+.p-feedback { color-scheme: dark; } /* tmavý dropdown pro nat. select */
+
+/* --- Form controls (select, input, textarea) ---------------------------- */
+.p-feedback select,
+.p-feedback input[type="text"],
+.p-feedback textarea{
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  border-radius: 10px;
+  padding: .5rem .65rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  transition: border-color .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+
+.p-feedback select:focus,
+.p-feedback input[type="text"]:focus,
+.p-feedback textarea:focus{
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow:
+    0 0 0 1px rgba(255,184,28,.35) inset,
+    0 0 0 2px rgba(255,184,28,.18);
+}
+
+.p-feedback ::placeholder{ color: var(--c-muted); opacity: .85; }
+
+/* Rozbalené položky selectu – tmavé pozadí, čitelný text */
+.p-feedback select option,
+.p-feedback select optgroup{
+  background: #0f1318;
+  color: var(--c-text);
+}
+
+/* --- Seznam připomínek – vzhled jako „boxy událostí“ v kalendáři ------- */
+/* ponecháváme stávající HTML, přepíšeme inline style pouze tady */
+.p-feedback .fb-list{ display: grid; gap: .55rem; }
+
+.p-feedback .fb-list > li{
+  /* zruší inline border-top a padding a dej náš „event box“ look */
+  border-top: none !important;
+  padding: .75rem .9rem !important;
+
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+
+  transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+  box-shadow: 0 6px 16px rgba(0,0,0,.18);
+}
+.p-feedback .fb-list > li:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+}
+
+/* jemnější vzhled subjectu (je v <em>) */
+.p-feedback .fb-list em{ color: var(--c-muted); }
+
+/* drobnosti pro typografii uvnitř položky */
+.p-feedback .fb-list .muted{ opacity: .8; }

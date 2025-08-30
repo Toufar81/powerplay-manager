@@ -1,68 +1,57 @@
+{# file: powerplay_app/templates/site/player_detail.html #}
 {% extends "site/base.html" %}
 {% load static %}
 
 {% block title %}{{ player.first_name }} {{ player.last_name }} | Hráči | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
 {% block crumbs %}Domů / <a href="{% url 'site:players' %}" class="link">Hráči</a> / {{ player.first_name }} {{ player.last_name }}{% endblock %}
 
-{# stránkový CSS jen pro detail hráče – scope .p-player #}
-{% block head_extra %}
-<style>
-  .p-player .player-hero{padding:clamp(1.4rem,3vw,2.2rem) 0;border-bottom:1px solid var(--c-border);background:
-    radial-gradient(700px 300px at 90% 0%, rgba(255,209,0,.08), transparent 60%),
-    radial-gradient(600px 250px at 10% 0%, rgba(255,209,0,.12), transparent 60%);}
-  .p-player .player-hero__inner{display:grid;grid-template-columns:200px 1fr;gap:1rem;align-items:center;}
-  .p-player .player-hero__photo{width:200px;height:200px;object-fit:cover;border-radius:18px;background:#0d1117;border:1px solid var(--c-primary);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,184,28,.28);}
-  .p-player .player-hero__top{display:flex;align-items:baseline;gap:.65rem;}
-  .p-player .player-hero__name{margin:0;font-family:var(--ff-cond);font-weight:900;font-size:clamp(1.6rem,4vw,2.4rem);}
-  .p-player .player-hero__meta{display:flex;align-items:center;gap:.5rem;margin-top:.25rem;}
-  .p-player .player-hero__meta .dot{width:4px;height:4px;background:var(--c-border);border-radius:999px;}
-  .p-player .player-hero__contacts{margin-top:.35rem;display:flex;align-items:center;gap:.5rem;}
-  .p-player .player-hero__actions{margin-top:.6rem;display:flex;gap:.5rem;flex-wrap:wrap;}
-  .p-player .pill{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:var(--nav-pill-radius);text-decoration:none;font-weight:900;letter-spacing:.02em;background:var(--c-surface);color:var(--c-primary);border:1px solid var(--c-primary);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .08s ease,filter .12s ease,box-shadow .12s ease;}
-  .p-player .pill:hover{transform:translateY(-1px);filter:brightness(1.02);}
-  .p-player .jersey{display:inline-flex;align-items:center;padding:.25rem .65rem;border-radius:999px;background:var(--c-surface);border:1px solid var(--c-primary);color:var(--c-primary);font-weight:900;letter-spacing:.02em;box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);}
-  .p-player .jersey--xl{font-size:clamp(1rem,2.4vw,1.2rem);}
-  .p-player .badge{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:999px;background:var(--c-surface);border:1px solid var(--c-primary);color:var(--c-primary);font-weight:900;letter-spacing:.02em;font-size:.92rem;}
-  @media (max-width:720px){.p-player .player-hero__inner{grid-template-columns:1fr}.p-player .player-hero__photo{width:160px;height:160px}}
-
-  /* Player detail only */
-  .p-player .player-hero__photo{
-    width: clamp(180px, 22vw, 240px);
-    height: clamp(180px, 22vw, 240px);
-    object-fit: contain;            /* zobrazit CELÉ */
-    object-position: 50% 50%;
-    background: rgba(255,255,255,.06);  /* „podklad“ za případné pruhy */
-    padding: 4px;                      /* tenký vnitřní rámeček (volitelné) */
-    border: 1px solid var(--c-border); /* aby to ladilo s panelem */
-  }
-
-  @media (max-width: 720px){
-    .p-player .player-hero__photo{ width: 180px; height: 180px; }
-  }
-</style>
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'site/css/player_detail.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="p-player">
+
+  {# ——— HERO s fotkou a kontakty ——— #}
   <section class="player-hero">
     <div class="container player-hero__inner">
       <div class="player-hero__media">
-        <img class="player-hero__photo" src="{{ player.photo_url }}" alt="{{ player.first_name }} {{ player.last_name }}" width="240" height="240">
+        <img class="player-hero__photo"
+             src="{{ player.photo_url }}"
+             alt="{{ player.first_name }} {{ player.last_name }}"
+             width="240" height="240">
       </div>
+
       <div class="player-hero__body">
         <div class="player-hero__top">
-          {% if player.jersey_number %}<span class="jersey jersey--xl">#{{ player.jersey_number }}</span>{% endif %}
+          {% if player.jersey_number %}
+            <span class="jersey jersey--xl">#{{ player.jersey_number }}</span>
+          {% endif %}
           <h1 class="player-hero__name">{{ player.first_name }} {{ player.last_name }}</h1>
         </div>
+
         <div class="player-hero__meta">
           <span class="badge">{{ player.get_position_display }}</span>
-          {% if age %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ age }} let</span>{% endif %}
-          {% if player.country %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ player.country.name }}</span>{% endif %}
+          {% if age %}
+            <span class="dot" aria-hidden="true"></span>
+            <span class="muted">{{ age }} let</span>
+          {% endif %}
+          {% if player.country %}
+            <span class="dot" aria-hidden="true"></span>
+            <span class="muted">{{ player.country.name }}</span>
+          {% endif %}
         </div>
+
         <div class="player-hero__contacts">
-          {% if player.email %}<a class="link" href="mailto:{{ player.email }}">{{ player.email }}</a>{% endif %}
-          {% if player.phone %}{% if player.email %}<span class="dot" aria-hidden="true"></span>{% endif %}<a class="link" href="tel:{{ player.phone|cut:" " }}">{{ player.phone }}</a>{% endif %}
+          {% if player.email %}
+            <a class="link" href="mailto:{{ player.email }}">{{ player.email }}</a>
+          {% endif %}
+          {% if player.phone %}
+            {% if player.email %}<span class="dot" aria-hidden="true"></span>{% endif %}
+            <a class="link" href="tel:{{ player.phone|cut:" " }}">{{ player.phone }}</a>
+          {% endif %}
         </div>
+
         <div class="player-hero__actions">
           <a class="pill" href="{% url 'site:players' %}#player-{{ player.id }}">Zobrazit kartu</a>
           {% if player.email %}<a class="pill" href="mailto:{{ player.email }}">Napsat</a>{% endif %}
@@ -71,20 +60,123 @@
     </div>
   </section>
 
-  <section class="section">
+  {# ——— STATISTIKY ——— #}
+  <section class="section section--stats">
     <div class="container">
-      <h2 class="section__title">Informace</h2>
-      <div class="info-grid mt-2">
-        <div class="info-row"><span class="info-k">Pozice</span><span class="info-v">{{ player.get_position_display }}</span></div>
-        <div class="info-row"><span class="info-k">Číslo dresu</span><span class="info-v">{% if player.jersey_number %}#{{ player.jersey_number }}{% else %}—{% endif %}</span></div>
-        <div class="info-row"><span class="info-k">Tým</span><span class="info-v">{% if player.team %}{{ player.team.name }}{% else %}—{% endif %}</span></div>
-        <div class="info-row"><span class="info-k">Město</span><span class="info-v">{% if player.team and player.team.city %}{{ player.team.city }}{% else %}—{% endif %}</span></div>
-        <div class="info-row"><span class="info-k">Datum narození</span><span class="info-v">{% if player.birth_date %}{{ player.birth_date|date:'j. n. Y' }}{% else %}—{% endif %}</span></div>
+      <h2 class="section__title">Statistiky (sezóna)</h2>
+
+      {# Pilulky filtru soutěže (Liga/Turnaj/Přátelské/Vše) #}
+      {% url 'site:player_detail' pk=player.pk as me_url %}
+      <div class="filters mt-2" role="tablist" aria-label="Filtr soutěže">
+        <a class="filter__link {% if season_meta.cmp == 'league' %}is-active{% endif %}" href="{{ me_url }}?cmp=league">Liga</a>
+        <a class="filter__link {% if season_meta.cmp == 'tournament' %}is-active{% endif %}" href="{{ me_url }}?cmp=tournament">Turnaj</a>
+        <a class="filter__link {% if season_meta.cmp == 'friendly' %}is-active{% endif %}" href="{{ me_url }}?cmp=friendly">Přátelské</a>
+        <a class="filter__link {% if season_meta.cmp == 'all' %}is-active{% endif %}" href="{{ me_url }}?cmp=all">Vše</a>
       </div>
-      <div class="mt-4">
-        <h2 class="section__title">Statistiky (sezóna)</h2>
-        <p class="muted">Přidáme v dalším kroku.</p>
-      </div>
+
+      {# Tabulka zápasů #}
+      {% if game_rows %}
+        <table class="stats-table mt-2">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Soutěž</th>
+              <th>Soupeř</th>
+              <th>Výsledek</th>
+              {% if is_goalie %}
+                <th class="num">GA</th>
+                <th class="num">G</th>
+                <th class="num">A</th>
+                <th class="num">PIM</th>
+              {% else %}
+                <th class="num">G</th>
+                <th class="num">A</th>
+                <th class="num">PTS</th>
+                <th class="num">PIM</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in game_rows %}
+              <tr>
+                <td>
+                  {# Proklik na detail zápasu – fallback slug pro staré zápasy #}
+                  {% if r.game.slug %}
+                    <a class="link" href="{% url 'site:game_detail' pk=r.game.pk slug=r.game.slug %}">
+                      {{ r.game.starts_at|date:"j. n. Y" }}
+                    </a>
+                  {% else %}
+                    <a class="link" href="{% url 'site:game_detail' pk=r.game.pk slug='detail' %}">
+                      {{ r.game.starts_at|date:"j. n. Y" }}
+                    </a>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if r.game.get_competition_display %}
+                    {{ r.game.get_competition_display }}
+                    {# — doplněk: název ligy/turnaje — #}
+                    {% if r.game.competition == 'league' %}
+                      {% if r.game.league and r.game.league.name %}
+                        <span class="muted">— {{ r.game.league.name }}</span>
+                      {% elif season_meta.league %}
+                        <span class="muted">— {{ season_meta.league.name }}</span>
+                      {% endif %}
+                    {% elif r.game.competition == 'tournament' %}
+                      {% if r.game.tournament and r.game.tournament.name %}
+                        <span class="muted">— {{ r.game.tournament.name }}</span>
+                      {% elif r.game.tournament_name %}
+                        <span class="muted">— {{ r.game.tournament_name }}</span>
+                      {% else %}
+                        <span class="muted">—</span>
+                      {% endif %}
+                    {% endif %}
+                  {% else %}—{% endif %}
+                </td>
+                <td>{% if r.is_away %}@ {% endif %}{{ r.opponent.name }}</td>
+                <td>
+                  {% if r.result_letter %}
+                    <span class="result result--{{ r.result_letter }}">{{ r.result_letter }}</span>
+                    <span class="muted">({{ r.game.score_home }} : {{ r.game.score_away }})</span>
+                  {% else %}—{% endif %}
+                </td>
+
+                {% if is_goalie %}
+                  <td class="num">{{ r.ga }}</td>
+                  <td class="num">{{ r.g }}</td>
+                  <td class="num">{{ r.a }}</td>
+                  <td class="num">{{ r.pim }}</td>
+                {% else %}
+                  <td class="num">{{ r.g }}</td>
+                  <td class="num">{{ r.a }}</td>
+                  <td class="num">{{ r.pts }}</td>
+                  <td class="num">{{ r.pim }}</td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted mt-2">Bez zápasů v tomto filtru.</p>
+      {% endif %}
+
+      {# Souhrnné chips #}
+      {% if is_goalie %}
+        <div class="stat-line">
+          <span class="stat"><span class="k">GP</span>  <span class="v">{{ stats.gp|default:0 }}</span></span>
+          <span class="stat"><span class="k">GA</span>  <span class="v">{{ stats.ga|default:0 }}</span></span>
+          <span class="stat"><span class="k">G</span>   <span class="v">{{ stats.g|default:0 }}</span></span>
+          <span class="stat"><span class="k">A</span>   <span class="v">{{ stats.a|default:0 }}</span></span>
+          <span class="stat"><span class="k">PIM</span> <span class="v">{{ stats.pim|default:0 }}</span></span>
+        </div>
+      {% else %}
+        <div class="stat-line">
+          <span class="stat"><span class="k">GP</span>  <span class="v">{{ stats.gp|default:0 }}</span></span>
+          <span class="stat"><span class="k">G</span>   <span class="v">{{ stats.g|default:0 }}</span></span>
+          <span class="stat"><span class="k">A</span>   <span class="v">{{ stats.a|default:0 }}</span></span>
+          <span class="stat"><span class="k">PTS</span> <span class="v">{{ stats.pts|default:0 }}</span></span>
+          <span class="stat"><span class="k">PIM</span> <span class="v">{{ stats.pim|default:0 }}</span></span>
+        </div>
+      {% endif %}
     </div>
   </section>
 </div>

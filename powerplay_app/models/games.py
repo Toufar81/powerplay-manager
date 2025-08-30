@@ -53,6 +53,16 @@ class Game(models.Model):
           set.
     """
 
+    # Stabilní klíč pro importy (např. "nhlliga:1:277"); NULL u ručních zápasů
+    external_uid = models.CharField(
+        "Externí UID",
+        max_length=80,
+        null=True,
+        blank=True,
+        unique=True,
+        help_text="Stabilní externí identifikátor (např. nhlliga:<season_id>:<id>).",
+    )
+
     starts_at = models.DateTimeField("Datum a čas zápasu")
     time_only = models.TimeField("Čas (volitelné)", blank=True, null=True)
 
@@ -87,14 +97,16 @@ class Game(models.Model):
         default=GameCompetition.LEAGUE,
         help_text="Ligový / Turnaj / Přátelský",
     )
+    # Game.league — mazání ligy smázne jen její ligové zápasy (týmy zůstanou)
     league = models.ForeignKey(
         League,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,  # dříve SET_NULL
         null=True,
         blank=True,
         verbose_name="Liga",
         help_text="Vyplň pouze u ligového zápasu.",
     )
+
     tournament = models.ForeignKey(
         Tournament,
         on_delete=models.SET_NULL,
@@ -125,6 +137,21 @@ class Game(models.Model):
                 fields=["competition", "starts_at", "home_team", "away_team"],
                 name="uniq_game_friendly",
                 condition=Q(competition=GameCompetition.FRIENDLY),
+            ),
+            models.CheckConstraint(
+                name="chk_game_league_required_for_league_comp",
+                check=~Q(competition=GameCompetition.LEAGUE) | Q(league__isnull=False),
+            ),
+            models.CheckConstraint(
+                name="chk_game_tournament_required_for_tournament_comp",
+                check=~Q(competition=GameCompetition.TOURNAMENT) | Q(tournament__isnull=False),
+            ),
+            models.CheckConstraint(
+                name="chk_game_friendly_requires_no_refs",
+                check=(
+                        ~Q(competition=GameCompetition.FRIENDLY)
+                        | (Q(league__isnull=True) & Q(tournament__isnull=True))
+                ),
             ),
         ]
 
@@ -197,6 +224,7 @@ class Game(models.Model):
     def get_absolute_url(self) -> str:  # pragma: no cover - simple helper
         """Site URL for public/portal detail (same view, forks by auth)."""
         return reverse("site:game_detail", args=[self.pk, self.canonical_slug()])
+
 
 # --- Game nomination -------------------------------------------------------
 

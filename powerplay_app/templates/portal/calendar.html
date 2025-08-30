@@ -1,59 +1,78 @@
 {% extends "portal/base.html" %}
+{% load static %}
 
 {% block title %}Kalendář | Portál{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'portal/css/calendar.css' %}">
+{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section p-calendar">  {# ← přidáno p-calendar #}
   <div class="container">
     <h1 class="section__title">Kalendář týmových akcí</h1>
 
-    {% if events and events|length %}
-      <div class="card mt-2">
-        <ul class="clean-list">
-          {% for e in events %}
-          <li style="display:grid;grid-template-columns:180px 1fr;gap:.75rem;padding:.5rem 0;border-top:1px solid var(--c-border);">
-            <div class="muted">{{ e.starts_at|date:"j. n. Y, H:i" }}</div>
-            <div>
-              <strong>{{ e.get_event_type_display }}</strong> — {{ e.title }}
-              {% if e.stadium %}<span class="muted"> • {{ e.stadium.name }}</span>{% endif %}
-              {% if e.related_game_id %}
-                <div class="muted" style="font-size:.9rem;">
-                  {{ e.related_game.home_team.name }} vs {{ e.related_game.away_team.name }}
+    {# STICKY filtry #}
+    <div class="filters-bar">
+      <div class="filters-scroll">
+        <div class="filters" role="tablist" aria-label="Filtr typu">
+          {% for key, label, cnt in pills %}
+            <a class="filter__link {% if selected_tab == key %}is-active{% endif %}" href="?tab={{ key }}">
+              {{ label }} <span class="filter__count">{{ cnt }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+    {% if items %}
+      <div class="cal-list card mt-2">
+        {% for it in items %}
+          <article class="cal-item cal-item--{{ it.type }}">
+            <div class="cal-time">
+              <div class="cal-date">{{ it.starts_at|date:"j. n. Y" }}</div>
+              <div class="cal-clock">{{ it.starts_at|date:"H:i" }}</div>
+            </div>
+
+            {# obsah #}
+            <div class="cal-main">
+              <div class="cal-top">
+                <span class="cal-badge">{{ it.type_label }}</span>
+                {% if it.stadium_name %}<span class="cal-dot">•</span><span class="cal-loc">{{ it.stadium_name }}</span>{% endif %}
+              </div>
+
+              {% if it.kind == "game" %}
+                <div class="cal-match">
+                  <div class="team team--left">
+                    {% if it.home_logo %}<img class="team__logo" src="{{ it.home_logo }}" alt="">{% endif %}
+                    <div class="team__name">{{ it.home_name }}</div>
+                  </div>
+                  <div class="cal-vs">vs</div>
+                  <div class="team team--right">
+                    <div class="team__name">{{ it.away_name }}</div>
+                    {% if it.away_logo %}<img class="team__logo" src="{{ it.away_logo }}" alt="">{% endif %}
+                  </div>
+                </div>
+                {% if it.url %}
+                  <a class="link-overlay" href="{{ it.url }}"
+                     aria-label="Detail zápasu: {{ it.home_name }} vs {{ it.away_name }} {{ it.starts_at|date:'j. n. Y H:i' }}"></a>
+                {% endif %}
+              {% else %}
+                <div class="cal-title">
+                  {% if it.single_logo %}<img class="team__logo team__logo--single" src="{{ it.single_logo }}" alt="">{% endif %}
+                  <strong>{{ it.title }}</strong>
                 </div>
               {% endif %}
             </div>
-          </li>
-          {% endfor %}
-        </ul>
+          </article>
+        {% endfor %}
       </div>
-
-    {% elif fallback_games and fallback_games|length %}
-      <div class="flash__item" style="margin:.75rem 0;">
-        Kalendář zatím nemá vytvořené události. Zobrazuji přímo <strong>nadcházející zápasy</strong>
-        (do {{ range_end|date:"j. n." }}).
-      </div>
-      <div class="card mt-2">
-        <ul class="clean-list">
-          {% for g in fallback_games %}
-          <li style="display:grid;grid-template-columns:180px 1fr;gap:.75rem;padding:.5rem 0;border-top:1px solid var(--c-border);">
-            <div class="muted">{{ g.starts_at|date:"j. n. Y, H:i" }}</div>
-            <div>
-              <strong>{{ g.home_team.name }}</strong>
-              <span class="muted">vs</span>
-              <strong>{{ g.away_team.name }}</strong>
-              {% if g.stadium %}<span class="muted"> • {{ g.stadium.name }}</span>{% endif %}
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-
     {% else %}
-      <div class="card mt-2">
-        <div class="muted">V nejbližších 30 dnech není žádná událost.</div>
-      </div>
+      <div class="card mt-2"><div class="muted">V nejbližších dnech není žádná událost.</div></div>
     {% endif %}
-
   </div>
 </section>
 {% endblock %}

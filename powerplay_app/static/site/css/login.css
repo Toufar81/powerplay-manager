@@ -1,0 +1,99 @@
+/* === Site › Login (scoped) ================================================== */
+/* Všechno je zanořené pod .p-login, ať nic nerozbije zbytek webu. */
+
+.p-login .login-container{
+  max-width: 520px;
+}
+
+/* Titulek karty sjednocen se stylem ostatních stránek */
+.p-login .card__title{
+  margin: 0 0 .25rem 0;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+/* Vizuál formuláře jako na „Účet“ */
+.p-login .login-form{
+  display: grid;
+  gap: .75rem;
+}
+.p-login .login-field{
+  display: grid;
+  gap: .35rem;
+}
+
+.p-login input[type="text"],
+.p-login input[type="email"],
+.p-login input[type="password"],
+.p-login select{
+  width: 100%;
+  color: var(--c-text);
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: .5rem .65rem;
+  outline: none;
+  transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.p-login input[type="text"]:focus,
+.p-login input[type="email"]:focus,
+.p-login input[type="password"]:focus,
+.p-login select:focus{
+  border-color: var(--c-primary);
+  box-shadow:
+    0 0 0 1px rgba(255,184,28,.35) inset,
+    0 0 0 2px rgba(255,184,28,.10);
+  background: rgba(255,255,255,.08);
+}
+
+/* Logo v pravém horním rohu karty – s jemnou žlutou „aurou“ */
+.p-login .login-card{
+  position: relative;
+}
+.p-login .login-card__logo{
+  position: absolute;
+  top: -14px;
+  right: -14px;      /* přesun do pravého rohu */
+  left: auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: rgba(255,255,255,.06);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  /* žlutá aura + jemný stín */
+  box-shadow:
+    0 0 0 1px rgba(255,184,28,.35),
+    0 4px 12px rgba(0,0,0,.25);
+}
+.p-login .login-card__logo img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.p-login .login-card__logo-fallback{
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--c-text);
+  opacity: .9;
+}
+
+/* Chybová hláška – sjednocení */
+.p-login .flash__item--error{
+  border-color:#842029;
+  background:#2c0b0e;
+  color:#f8d7da;
+  border-radius: 10px;
+}
+
+/* Drobnosti */
+@media (max-width: 480px){
+  .p-login .login-card__logo{
+    top: -12px;
+    right: -12px;    /* zachovat pravý roh i na mobilu */
+    width: 44px;
+    height: 44px;
+  }
+}

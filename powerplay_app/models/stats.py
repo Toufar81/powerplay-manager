@@ -55,6 +55,10 @@ class PlayerStats(models.Model):
         verbose_name = "Statistika hráče"
         verbose_name_plural = "Statistiky hráčů"
 
+    @property
+    def pim(self) -> int:
+        return getattr(self, "minutes", 0) or 0
+
     def __str__(self) -> str:  # pragma: no cover - trivial
         """Readable label combining player and game."""
         return f"{self.player} - {self.game}"

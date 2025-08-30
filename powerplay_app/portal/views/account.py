@@ -33,25 +33,21 @@ class AccountView(LoginRequiredMixin, TemplateView):
 
     template_name: str = "portal/account.html"
 
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        """Build context with both forms prefilled for the current user.
-
-        Args:
-            **kwargs: Extra context kwargs passed by Django.
-
-        Returns:
-            Template context including ``profile_form``, ``password_form``, and
-            the current menu marker.
-        """
+    def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         user = self.request.user
-        ctx.update(
-            {
-                "profile_form": ProfileForm(instance=user),
-                "password_form": PasswordChangeForm(user=user),
-                "current": "account",
-            }
-        )
+
+        first_name = getattr(user, "first_name", "") or ""
+        last_name = getattr(user, "last_name", "") or ""
+
+        ctx.update({
+            "profile_form": ProfileForm(instance=user),
+            "password_form": PasswordChangeForm(user=user),
+            "current": "account",
+            # pro template:
+            "account_first_name": first_name,
+            "account_last_name": last_name,
+        })
         return ctx
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:

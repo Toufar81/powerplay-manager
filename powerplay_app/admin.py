@@ -12,6 +12,8 @@ from typing import Any
 from functools import lru_cache
 
 import nested_admin
+from django.db.models import IntegerField, Subquery, OuterRef
+from django.db.models.functions import Coalesce
 from django import forms
 from django.conf import settings
 from .models.wallet import WalletCategory, WalletTransaction
@@ -50,10 +52,11 @@ from .models import (
     Team,
     TeamEvent,
     Tournament,
-    _recompute_game,
+
 )
 from .models.games import GameNomination, LineSlot, Game as GameModel, GameCompetition
 from .models.stats_proxy import PlayerSeasonTotals
+from powerplay_app.services.stats import recompute_game
 
 
 # ------------------------------------------------------------
@@ -128,10 +131,23 @@ class LeagueAdmin(admin.ModelAdmin):
 @admin.register(Stadium)
 class StadiumAdmin(admin.ModelAdmin):
     """Admin for stadiums."""
-
-    list_display = ("name", "address")
+    list_display = ("name", "address", "photo_thumb")  # ← upraveno
     search_fields = ("name", "address")
+    readonly_fields = ("photo_preview",)
 
+    fields = ("name", "address", "map_url", "photo", "photo_preview")
+
+    def photo_thumb(self, obj):
+        if getattr(obj, "photo", None):
+            return format_html('<img src="{}" style="height:40px;border-radius:4px;" />', obj.photo.url)
+        return "—"
+    photo_thumb.short_description = "Foto"
+
+    def photo_preview(self, obj):
+        if getattr(obj, "photo", None):
+            return format_html('<img src="{}" style="max-height:240px;border-radius:8px;" />', obj.photo.url)
+        return "—"
+    photo_preview.short_description = "Náhled"
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
@@ -185,6 +201,12 @@ class TeamAdmin(admin.ModelAdmin):
     search_fields = ("name", "city", "coach")
     inlines = [StaffInline]
 
+    fieldsets = (  # ← přidáme sekce, nic neodstraňujeme
+        ("Základní", {"fields": ("league", "name", "city", "coach", "stadium", "logo")}),
+        ("Veřejné kontakty", {"fields": ("public_email", "website_url")}),
+        ("Interní", {"fields": ("staff_notes",)}),
+    )
+
     # Classic selects (no autocomplete) for league and stadium
     def formfield_for_foreignkey(self, db_field: Any, request: Any, **kwargs: Any):
         if db_field.name == "league":
@@ -223,6 +245,22 @@ class StaffAdmin(admin.ModelAdmin):
         "address",
     )
     ordering = ("team", "order", "last_name")
+
+    fieldsets = (
+        ("Základní", {
+            "fields": (
+                "team",
+                ("first_name", "last_name"),
+                "role",
+                "role_description",   # ← NEW
+                "photo",
+                ("order", "is_active"),
+            )
+        }),
+        ("Kontakt", {
+            "fields": ("phone", "email", "address")
+        }),
+    )
 
     def formfield_for_foreignkey(self, db_field: Any, request: Any, **kwargs: Any):
         """Classic select for team with ordering and wider widget."""
@@ -858,7 +896,8 @@ class GameAdmin(nested_admin.NestedModelAdmin):
     def recompute_selected_games(self, request: Any, queryset: Any) -> None:
         """Recompute score and statistics for selected games using app service."""
         for g in queryset:
-            _recompute_game(g)
+            recompute_game(g)
+
         self.message_user(request, f"Přepočítáno: {queryset.count()} zápasů")
 
     @admin.action(description="Vygenerovat výchozí lajny 0–3 pro domácí/hosty (pokud chybí)")
@@ -902,6 +941,32 @@ class GameAdmin(nested_admin.NestedModelAdmin):
         sync_side(game.away_team, [p.id for p in away_sel])
 
         _debug_print_lineups(game)
+
+        # --- INFO: kontrola nesouladu ručního skóre vs. počet gólů z událostí ---
+        goal_counts = (
+            Goal.objects.filter(game=game)
+            .values("team")
+            .annotate(c=Count("id"))
+        )
+        by_team = {row["team"]: row["c"] for row in goal_counts}
+        hg = int(by_team.get(game.home_team_id, 0) or 0)
+        ag = int(by_team.get(game.away_team_id, 0) or 0)
+
+        if (hg, ag) != (game.score_home, game.score_away):
+            self.message_user(
+                request,
+                (
+                    f"Pozor: součet gólů ({hg}:{ag}) neodpovídá ručnímu skóre "
+                    f"({game.score_home}:{game.score_away}). Skóre je zdroj pravdy."
+                ),
+                level=messages.INFO,
+            )
+
+        # Po uložení nominací, lajn, gólů a trestů rovnou přepočítáme statistiky zápasu.
+        try:
+            recompute_game(game)
+        except Exception as e:
+            self.message_user(request, f"Upozornění: přepočet statistik selhal: {e}", level=messages.WARNING)
 
 
 # ------------------------------------------------------------
@@ -1061,47 +1126,40 @@ class PlayerSeasonTotalsAdmin(admin.ModelAdmin):
     list_filter = ("team__league", "team")
     actions = ["debug_totals", "debug_ga"]
 
-    def get_queryset(self, request: Any):  # type: ignore[override]
-        """Annotate queryset with totals without duplicating rows."""
-        qs = super().get_queryset(request)
+    def get_queryset(self, request):  # type: ignore[override]
+        """
+        Sezonní součty z PlayerStats + GP z GameNomination,
+        každé jako samostatný subdotaz → žádné násobení přes JOIN.
+        """
+        qs = super().get_queryset(request).select_related("team", "team__league")
 
-        # GP, G, A, PIM using correct reverse names
+        gp_sq = (
+            GameNomination.objects
+            .filter(player=OuterRef("pk"))
+            .values("player")
+            .annotate(gp=Count("game", distinct=True))
+            .values("gp")[:1]
+        )
+
+        ps_sq = (
+            PlayerStats.objects
+            .filter(player=OuterRef("pk"))
+            .values("player")
+            .annotate(
+                g=Coalesce(Sum("goals"), 0),
+                a=Coalesce(Sum("assists"), 0),
+                pim=Coalesce(Sum("penalty_minutes"), 0),
+                ga=Coalesce(Sum("goals_against"), 0),
+            )
+        )
+
         qs = qs.annotate(
-            games_played=Coalesce(Count("nominations__game", distinct=True), Value(0)),
-            goals=Coalesce(Count("goals_scored"), Value(0)),
-            assists=Coalesce(Count("assists_primary") + Count("assists_secondary"), Value(0)),
-            penalty_minutes=Coalesce(Sum("penalty__minutes"), Value(0)),
+            games_played=Coalesce(Subquery(gp_sq, output_field=IntegerField()), Value(0)),
+            goals=Coalesce(Subquery(ps_sq.values("g")[:1], output_field=IntegerField()), Value(0)),
+            assists=Coalesce(Subquery(ps_sq.values("a")[:1], output_field=IntegerField()), Value(0)),
+            penalty_minutes=Coalesce(Subquery(ps_sq.values("pim")[:1], output_field=IntegerField()), Value(0)),
+            goals_against=Coalesce(Subquery(ps_sq.values("ga")[:1], output_field=IntegerField()), Value(0)),
         ).annotate(points=F("goals") + F("assists"))
-
-        # GA via subqueries to avoid multiplication across other joins
-        sq_ga_home = (
-            LineAssignment.objects.filter(
-                player_id=OuterRef("pk"),
-                slot="G",
-                line__line_number=0,
-                line__game__home_team_id=OuterRef("team_id"),
-            )
-            .values("player")
-            .annotate(s=Sum("line__game__score_away"))
-            .values("s")[:1]
-        )
-
-        sq_ga_away = (
-            LineAssignment.objects.filter(
-                player_id=OuterRef("pk"),
-                slot="G",
-                line__line_number=0,
-                line__game__away_team_id=OuterRef("team_id"),
-            )
-            .values("player")
-            .annotate(s=Sum("line__game__score_home"))
-            .values("s")[:1]
-        )
-
-        qs = qs.annotate(
-            goals_against=Coalesce(Subquery(sq_ga_home, output_field=IntegerField()), Value(0))
-            + Coalesce(Subquery(sq_ga_away, output_field=IntegerField()), Value(0))
-        )
 
         return qs
 

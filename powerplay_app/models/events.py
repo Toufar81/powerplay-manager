@@ -151,6 +151,22 @@ class Goal(GameEventBase):
             raise ValidationError(
                 "Asistent 2 nesmí být střelcem ani shodný s Asistentem 1."
             )
+        # --- Limit podle SKÓRE (ruční i API) ---
+        if self.game_id and self.team_id:
+            is_home = (self.team_id == self.game.home_team_id)
+            limit = int(self.game.score_home if is_home else self.game.score_away)
+
+            from powerplay_app.models import Goal as GoalModel
+            already = GoalModel.objects.filter(
+                game_id=self.game_id, team_id=self.team_id
+            ).exclude(pk=self.pk).count()
+
+            if already + 1 > limit:
+                side = "domácích" if is_home else "hostů"
+                raise ValidationError(
+                    f"Počet gólů {side} ({already + 1}) by překročil skóre ({limit}). "
+                    "Nejdřív upravte Skóre v hlavičce zápasu."
+                )
 
 
 class Penalty(GameEventBase):

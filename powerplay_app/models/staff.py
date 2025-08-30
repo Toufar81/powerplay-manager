@@ -40,10 +40,14 @@ class Staff(models.Model):
     first_name = models.CharField("Jméno", max_length=100)
     last_name = models.CharField("Příjmení", max_length=100)
     role = models.CharField("Funkce", max_length=255)
+
+    # NEW: delší popis role/funkce
+    role_description = models.TextField("Popis funkce", blank=True)
+
     phone = models.CharField(
         "Telefon", max_length=30, blank=True, null=True, validators=[phone_validator]
     )
-    email = models.EmailField("E‑mail", blank=True, null=True)
+    email = models.EmailField("E-mail", blank=True, null=True)
     photo = models.ImageField("Fotografie", upload_to="staff_photos/", blank=True, null=True)
     address = models.CharField("Adresa", max_length=255, blank=True, null=True)
     is_active = models.BooleanField("Aktivní", default=True)

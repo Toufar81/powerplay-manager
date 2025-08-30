@@ -20,6 +20,9 @@ from django.dispatch import receiver
 
 from .models import Game, Goal, Penalty, TeamEvent
 from powerplay_app.services.stats import recompute_game
+from .models.games import LineAssignment
+from django.db import transaction
+
 
 
 # --- Score recomputation triggers (Goal/Penalty) ---------------------------
@@ -116,11 +119,45 @@ def _sync_event_for_game(game: Game, *, create_if_missing: bool = True) -> None:
 
 @receiver(post_save, sender=Game)
 def _game_saved_sync_event(sender: type[Game], instance: Game, created: bool, **kwargs: Any) -> None:
-    """Sync or create the related calendar event after a game is saved."""
+    """
+    Po uložení hry:
+      - udrž kalendářovou událost v synchronu (beze změny chování),
+      - a pokud jde o nový zápas nebo se měnilo skóre, přepočítej statistiky.
+
+    Používáme transaction.on_commit, aby se přepočet spustil až po dopsání
+    všech změn do DB (bezpečné i vůči inline formulářům, API apod.).
+    """
+    # (původní chování – sync kalendáře)
     _sync_event_for_game(instance, create_if_missing=True)
+
+    # Rozhodnutí: přepočítat při vytvoření hry nebo při změně skóre.
+    update_fields = kwargs.get("update_fields")
+    score_changed = (
+        update_fields is None  # save() bez update_fields – bereme jako „možná změna“
+        or "score_home" in update_fields
+        or "score_away" in update_fields
+        or created
+    )
+
+    if score_changed:
+        transaction.on_commit(lambda: recompute_game(instance))
+
+
 
 
 @receiver(post_delete, sender=Game)
 def _game_deleted_remove_event(sender: type[Game], instance: Game, **kwargs: Any) -> None:
     """Remove the related calendar event after a game is deleted."""
     TeamEvent.objects.filter(related_game=instance).delete()
+
+
+@receiver(post_save, sender=LineAssignment)
+@receiver(post_delete, sender=LineAssignment)
+def _lineup_changed(sender, instance: LineAssignment, **kwargs: Any) -> None:
+    """
+    Po změně sestavy přepočítáme zápas – důležité hlavně pro GA gólmanů.
+    """
+    try:
+        recompute_game(instance.line.game)
+    except Exception:
+        pass

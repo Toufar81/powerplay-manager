@@ -42,7 +42,9 @@ from django.db import transaction
 from django.utils import timezone
 from playwright.sync_api import sync_playwright
 
-from powerplay_app.models import League, Team, Stadium
+from powerplay_app.models import League, Team, Stadium, Goal
+from powerplay_app.services.stats import recompute_game
+
 from powerplay_app.models.games import Game, GameCompetition
 
 
@@ -53,18 +55,29 @@ SCHEDULE_URL = "https://nocnihokejovaliga.cz/schedule"
 # ------------------------------- Playwright fetcher --------------------------------
 
 def _iso_to_aware(dt_str: str) -> datetime:
-    """Convert ISO string (e.g. ``"2025-09-01T21:30:00.000Z"``) to aware UTC datetime.
-
-    Args:
-        dt_str: ISO timestamp, optionally suffixed with ``Z``.
-
-    Returns:
-        Timezone-aware datetime in UTC.
     """
-    dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
-    if timezone.is_naive(dt):
-        return timezone.make_aware(dt, timezone.utc)
-    return dt
+    Interpretuj timestamp z API jako **lokální čas** v settings.TIME_ZONE
+    (Europe/Prague). API vrací např. "2025-09-01T21:30:00.000Z", což je
+    lokální čas chybně označený "Z". Ignorujeme tedy offset a připojíme
+    výchozí časové pásmo projektu.
+    """
+    s = (dt_str or "").strip()
+
+    # Odstraň případné zakončení 'Z'
+    if s.endswith("Z"):
+        s = s[:-1]
+
+    # Pokud by byl přítomen offset (+HH:MM / -HH:MM), odstřihni ho
+    for sign in ("+", "-"):
+        idx = s.find(sign, 10)  # až za datovou částí
+        if idx != -1:
+            s = s[:idx]
+            break
+
+    # Naparsuj naivní lokální čas a udělej z něj aware v defaultní TZ
+    naive = datetime.fromisoformat(s)
+    return timezone.make_aware(naive, timezone.get_default_timezone())
+
 
 
 def fetch_teams_and_matches(
@@ -302,46 +315,79 @@ class Command(BaseCommand):
         def _sync() -> None:
             nonlocal created_games, updated_games
 
+            def prune_goals_to_score(game: Game) -> None:
+                """
+                Delete extra Goal events if they exceed the manual score on the Game.
+                Keeps the newest goals (dle period/second/id) a maže přebytky.
+                """
+                if not (game.home_team_id and game.away_team_id):
+                    return
+
+                def _delete_excess(goals_qs, target_count: int) -> int:
+                    target = max(0, int(target_count or 0))
+                    total = goals_qs.count()
+                    extra = total - target
+                    if extra <= 0:
+                        return 0
+                    ids = list(goals_qs.values_list("id", flat=True)[:extra])
+                    if ids:
+                        Goal.objects.filter(id__in=ids).delete()
+                    return extra
+
+                qs_home = (
+                    Goal.objects
+                    .filter(game=game, team=game.home_team)
+                    .order_by("-period", "-second_in_period", "-id")
+                )
+                _delete_excess(qs_home, game.score_home)
+
+                qs_away = (
+                    Goal.objects
+                    .filter(game=game, team=game.away_team)
+                    .order_by("-period", "-second_in_period", "-id")
+                )
+                _delete_excess(qs_away, game.score_away)
+
             for m in matches:
                 try:
                     starts_at = _iso_to_aware(m["match_date"])
                 except Exception:
-                    # skip bad dates
                     self.stdout.write(f"⚠️  Přeskakuji zápas s nevalidním datem: {m.get('match_date')}")
                     continue
+
+                # Musíme mít season_id i id – bez toho nevytváříme UID
+                season_id = m.get("season_id")
+                match_id = m.get("id")
+                if season_id is None or match_id is None:
+                    self.stdout.write("⚠️  Přeskakuji zápas bez season_id nebo id.")
+                    continue
+
+                external_uid = f"nhlliga:{season_id}:{match_id}"
 
                 home_team = get_team(m["home_team_id"])
                 away_team = get_team(m["away_team_id"])
                 stadium = get_stadium(m.get("venue"))
 
-                # None → 0 (DB NOT NULL)
                 score_home = m.get("home_score") or 0
                 score_away = m.get("away_score") or 0
 
-                # UPSERT by unique constraint for league games
-                lookups = dict(
+                defaults = dict(
                     competition=GameCompetition.LEAGUE,
                     league=league,
                     starts_at=starts_at,
                     home_team=home_team,
                     away_team=away_team,
-                )
-                defaults = dict(
                     score_home=score_home,
                     score_away=score_away,
                     stadium=stadium,
                 )
 
                 if dry:
-                    # simulate upsert
-                    exists = Game.objects.filter(**lookups).first()
+                    exists = Game.objects.filter(external_uid=external_uid).first()
                     if exists:
-                        will_change = (
-                            exists.score_home != score_home
-                            or exists.score_away != score_away
-                            or (stadium and exists.stadium_id != stadium.id)
-                            or exists.competition != GameCompetition.LEAGUE
-                            or exists.league_id != league.id
+                        will_change = any(
+                            getattr(exists, k) != v
+                            for k, v in defaults.items()
                         )
                         if will_change:
                             updated_games += 1
@@ -349,12 +395,17 @@ class Command(BaseCommand):
                         created_games += 1
                     continue
 
-                obj, created = Game.objects.update_or_create(defaults=defaults, **lookups)
+                obj, created = Game.objects.update_or_create(
+                    external_uid=external_uid,
+                    defaults=defaults,
+                )
                 if created:
                     created_games += 1
                 else:
-                    # When stadium is None in both old/new values, Django won't mark as changed — that's fine.
                     updated_games += 1
+
+                prune_goals_to_score(obj)
+                recompute_game(obj)
 
         _sync()
 

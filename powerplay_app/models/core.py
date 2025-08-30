@@ -82,6 +82,7 @@ class Stadium(models.Model):
     name = models.CharField("Název stadionu", max_length=255)
     address = models.CharField("Adresa", max_length=255, blank=True, null=True)
     map_url = models.URLField("Mapa", blank=True, null=True)
+    photo = models.ImageField("Foto stadionu", upload_to="stadiums/", blank=True, null=True)
 
     class Meta:
         verbose_name = "Stadion"
@@ -119,8 +120,14 @@ class Team(models.Model):
         ``name`` is globally unique among teams.
     """
 
+    # Team.league — necháme týmy PŘEŽÍT smazání ligy
     league = models.ForeignKey(
-        "powerplay_app.League", on_delete=models.CASCADE, related_name="teams", verbose_name="Liga"
+        "powerplay_app.League",
+        on_delete=models.SET_NULL,  # dříve CASCADE
+        null=True,
+        blank=True,
+        related_name="teams",
+        verbose_name="Liga",
     )
     name = models.CharField("Název týmu", max_length=255, unique=True)
     city = models.CharField("Město", max_length=255, blank=True, null=True)
@@ -130,6 +137,8 @@ class Team(models.Model):
     )
     logo = models.ImageField("Logo týmu", upload_to="team_loga/", blank=True, null=True)
     staff_notes = models.TextField("Poznámky k realizačnímu týmu", blank=True, null=True)
+    public_email = models.EmailField("Obecný e-mail", blank=True, null=True)
+    website_url = models.URLField("Web klubu", blank=True, null=True)
 
     class Meta:
         verbose_name = "Tým"

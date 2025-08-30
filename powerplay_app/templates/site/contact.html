@@ -4,51 +4,138 @@
 {% block title %}Kontakt | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
 {% block crumbs %}Domů / Kontakt{% endblock %}
 
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'site/css/contact.css' %}">
+{% endblock %}
+
 {% block content %}
 <section class="section">
   <div class="container">
     <h1 class="section__title">Kontakt</h1>
 
+    {# ========== 1) KONTAKTNÍ OSOBY (nahoře) ========== #}
     <div class="card mt-2">
-      <h2 class="card__title">Stadion & místo</h2>
-      <div>
-        <div class="info-grid mt-2">
-          <div class="info-row"><span class="info-k">Stadion</span><span class="info-v">{% if team and team.stadium %}{{ team.stadium.name }}{% else %}—{% endif %}</span></div>
-          <div class="info-row"><span class="info-k">Adresa</span><span class="info-v">{% if team and team.stadium and team.stadium.address %}{{ team.stadium.address }}{% else %}—{% endif %}</span></div>
-          <div class="info-row"><span class="info-k">Město</span><span class="info-v">{% if team and team.city %}{{ team.city }}{% else %}—{% endif %}</span></div>
+      <h2 class="card__title">Kontaktní osoby</h2>
+      {% if staff %}
+        <div class="contact-list mt-2">
+          {% for m in staff %}
+            <div class="contact-row" aria-label="Kontakt: {{ m.first_name }} {{ m.last_name }}">
+              <div class="c-name">
+                <a href="{% url 'site:staff_detail' pk=m.pk %}" class="link-strong">{{ m.first_name }} {{ m.last_name }}</a>
+                {% if m.role %}<span class="c-role">{{ m.role }}</span>{% endif %}
+              </div>
+              <div class="c-contact">
+                {% if m.email %}
+                  <a class="link" href="mailto:{{ m.email }}">{{ m.email }}</a>
+                {% else %}
+                  <span class="muted">—</span>
+                {% endif %}
+                {% if m.phone %}
+                  <span class="dot" aria-hidden="true"></span>
+                  <a class="link" href="tel:{{ m.phone|cut:" " }}">{{ m.phone }}</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
         </div>
-        {% if team and team.stadium and team.stadium.map_url %}
-          <p class="mt-2"><a class="btn" href="{{ team.stadium.map_url }}" target="_blank" rel="noopener">Otevřít mapu</a></p>
+      {% else %}
+        <p class="muted">Zatím bez kontaktních osob.</p>
+      {% endif %}
+    </div>
+
+    {# ========== 2) KLUBOVÉ KONTAKTY (prostřední box) ========== #}
+    <div class="card mt-2">
+      <h2 class="card__title">Klubové kontakty</h2>
+      <div class="contact-actions mt-2">
+        {% if team and team.public_email %}
+          <a class="filter__link" href="mailto:{{ team.public_email }}">✉️ {{ team.public_email }}</a>
+        {% endif %}
+        {% if team and team.website_url %}
+          <a class="filter__link" href="{{ team.website_url }}" target="_blank" rel="noopener">🌐 Web klubu</a>
+        {% endif %}
+
+        {% if team %}
+          {% if not team.public_email and not team.website_url %}
+            <p class="muted">— Zatím bez veřejných kontaktů —</p>
+          {% endif %}
+        {% else %}
+          <p class="muted">— Zatím bez veřejných kontaktů —</p>
         {% endif %}
       </div>
     </div>
 
-    <h2 class="section__title mt-4">Kontaktní osoby</h2>
-    {% if staff %}
-      <div class="players-grid mt-2">
-        {% for m in staff %}
-          <div class="player-card" aria-label="Kontakt: {{ m.first_name }} {{ m.last_name }}">
-            <div class="player-card__media">
-              <img class="player-card__photo" src="{% if m.photo %}{{ m.photo.url }}{% else %}{% static 'powerplay_app/img/default_player.png' %}{% endif %}" alt="{{ m.first_name }} {{ m.last_name }}" loading="lazy" decoding="async" width="160" height="160" />
-            </div>
-            <div class="player-card__body">
-              <div class="player-card__top">
-                <h3 class="player-card__name">{{ m.first_name }} {{ m.last_name }}</h3>
-              </div>
-              <div class="player-card__meta">
-                <span class="badge">{{ m.role }}</span>
-              </div>
-              <div class="player-card__meta mt-2">
-                {% if m.email %}<a class="link" href="mailto:{{ m.email }}">{{ m.email }}</a>{% else %}<span class="muted">—</span>{% endif %}
-                {% if m.phone %}<span class="dot" aria-hidden="true"></span><a class="link" href="tel:{{ m.phone|cut:" " }}">{{ m.phone }}</a>{% endif %}
-              </div>
-            </div>
-          </div>
-        {% endfor %}
+    {# ========== 3) STADION & MÍSTO (spodní box) ========== #}
+    <div class="card mt-2 stadium">
+      <h2 class="card__title">Stadion &amp; místo</h2>
+
+      {# INFO NAHOŘE – v jednom řádku: Stadion | Adresa | Město #}
+      <div class="info-top">
+        <div class="info-top__item">
+          <span class="info-top__k">Stadion</span>
+          <span class="info-top__v">
+            {% if team and team.stadium %}{{ team.stadium.name }}{% else %}—{% endif %}
+          </span>
+        </div>
+        <div class="info-top__item">
+          <span class="info-top__k">Adresa</span>
+          <span class="info-top__v">
+            {% if team and team.stadium and team.stadium.address %}{{ team.stadium.address }}{% else %}—{% endif %}
+          </span>
+        </div>
+        <div class="info-top__item">
+          <span class="info-top__k">Město</span>
+          <span class="info-top__v">
+            {% if team and team.city %}{{ team.city }}{% else %}—{% endif %}
+          </span>
+        </div>
       </div>
-    {% else %}
-      <p class="muted">Zatím bez kontaktních osob.</p>
-    {% endif %}
+
+      {# FOTO — vlevo dole (pokud je) #}
+      {% if team and team.stadium and team.stadium.photo %}
+        <img
+          class="stadium__photo"
+          src="{{ team.stadium.photo.url }}"
+          alt="{{ team.stadium.name }}"
+          loading="lazy" decoding="async">
+      {% endif %}
+
+      {# MAPA (embed) — vpravo dole (pokud je) #}
+      {% if team and team.stadium and team.stadium.embed_url %}
+        <iframe
+          class="stadium__map"
+          src="{{ team.stadium.embed_url }}"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+      {% endif %}
+
+      {# FALLBACK – když není tým/stadion, nebo chybí obě média #}
+      {% if not team or not team.stadium %}
+        <img class="stadium__photo"
+             src="{% static 'powerplay_app/img/default_player.png' %}"
+             alt="Stadion" loading="lazy" decoding="async">
+      {% elif not team.stadium.photo and not team.stadium.embed_url %}
+        <img class="stadium__photo"
+             src="{% static 'powerplay_app/img/default_player.png' %}"
+             alt="{{ team.stadium.name }}" loading="lazy" decoding="async">
+      {% endif %}
+
+      {# TLAČÍTKO – pod mapou vpravo #}
+      {% if team and team.stadium %}
+        {% if team.stadium.map_url %}
+          <p class="stadium__open">
+            <a class="btn" href="{{ team.stadium.map_url }}" target="_blank" rel="noopener">Otevřít mapu</a>
+          </p>
+        {% elif team.stadium.address %}
+          <p class="stadium__open">
+            <a class="btn"
+               href="https://www.google.com/maps?q={{ team.stadium.address|urlencode }}"
+               target="_blank" rel="noopener">Otevřít mapu</a>
+          </p>
+        {% endif %}
+      {% endif %}
+    </div>
+
   </div>
 </section>
 {% endblock %}

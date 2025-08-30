@@ -1,42 +1,49 @@
+{# file: powerplay_app/templates/site/staff.html #}
 {% extends "site/base.html" %}
 {% load static %}
 
 {% block title %}Vedení | {% if primary_team %}{{ primary_team.name }} | {% endif %}PowerPlay{% endblock %}
 {% block crumbs %}Domů / Vedení{% endblock %}
 
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'site/css/staff.css' %}">
+{% endblock %}
+
 {% block content %}
-<section class="section">
-  <div class="container">
-    <h1 class="section__title">Vedení</h1>
+<div class="p-staff">
+  <section class="section">
+    <div class="container">
+      <h1 class="section__title">Vedení</h1>
 
-    {# DEBUG do HTML zdroje (volitelné) #}
-    debug: team_id={{ primary_team.id|default:'-' }}, staff_count={{ staff|length }}
+      {# DEBUG do zdroje (neviditelné na stránce) #}
+      <!-- debug: team_id={{ primary_team.id|default:'-' }}, staff_count={{ staff|length }} -->
 
-    {% if staff|length %}
-      <div class="players-grid mt-4">
-        {% for m in staff %}
-          <a href="{% url 'site:staff_detail' m.id %}" class="player-card" aria-label="Detail: {{ m.first_name }} {{ m.last_name }}">
-            <div class="player-card__media">
-              <img class="player-card__photo"
+      {% if staff|length %}
+        <div class="staff-grid mt-4">
+          {% for m in staff %}
+            <a href="{% url 'site:staff_detail' pk=m.pk %}"
+               class="staff-card"
+               aria-label="Detail: {{ m.first_name }} {{ m.last_name }}">
+              <img class="staff-card__photo"
                    src="{% if m.photo %}{{ m.photo.url }}{% else %}{% static 'powerplay_app/img/default_player.png' %}{% endif %}"
                    alt="{{ m.first_name }} {{ m.last_name }}"
-                   loading="lazy" decoding="async" width="160" height="160" />
-            </div>
-            <div class="player-card__body">
-              <div class="player-card__top">
-                <h3 class="player-card__name">{{ m.first_name }} {{ m.last_name }}</h3>
+                   loading="lazy" decoding="async" width="260" height="320">
+
+              <div class="staff-card__body">
+                <div class="staff-card__name">{{ m.first_name }} {{ m.last_name }}</div>
+                <div class="staff-card__role">{{ m.role }}</div>
+                <div class="staff-card__contact">
+                  {% if m.email %}<span>{{ m.email }}</span>{% endif %}
+                  {% if m.phone %}<span>{{ m.phone }}</span>{% endif %}
+                </div>
               </div>
-              <div class="player-card__meta">
-                <span class="badge">{{ m.role }}</span>
-                {% if m.email %}<span class="dot" aria-hidden="true"></span><span class="muted">{{ m.email }}</span>{% endif %}
-              </div>
-            </div>
-          </a>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="muted">Zatím bez členů vedení.</p>
-    {% endif %}
-  </div>
-</section>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted mt-2">Zatím bez členů vedení.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
 {% endblock %}

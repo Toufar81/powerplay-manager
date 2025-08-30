@@ -1,0 +1,173 @@
+/* === Staff (Vedení) ===================================================== */
+/* Udržujeme vizuální shodu s hráči, ale trochu formálnější feeling. */
+
+.p-staff{
+  --card-radius: 16px;
+  --card-bg: rgba(255,255,255,.04);
+  --card-border: 1px solid var(--c-border);
+}
+
+/* ----- GRID / CARDS ----------------------------------------------------- */
+.p-staff .staff-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.p-staff .staff-card{
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: .8rem;
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
+  border: var(--card-border);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow);
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.p-staff .staff-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  border-color: rgba(255,255,255,.18);
+}
+
+.p-staff .staff-card__photo{
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #111;
+}
+
+.p-staff .staff-card__body{ display:flex; flex-direction:column; gap:.15rem; }
+.p-staff .staff-card__name{ font-weight:900; font-size:1.06rem; letter-spacing:.01em; }
+.p-staff .staff-card__role{ color: var(--c-muted); font-weight:700; }
+.p-staff .staff-card__contact{
+  margin-top:.25rem; color:var(--c-muted); font-size:.95rem;
+  display:flex; flex-direction:column; gap:.15rem;
+}
+
+/* ----- HERO (přebírá motiv z hráče, ale decentnější) ------------------- */
+.p-staff .player-hero{
+  padding: clamp(1.2rem, 3vw, 2rem) 0;
+  border-bottom: 1px solid var(--c-border);
+  background:
+    radial-gradient(650px 260px at 90% 0%, rgba(255,209,0,.06), transparent 60%),
+    radial-gradient(540px 220px at 10% 0%, rgba(255,209,0,.10), transparent 60%);
+}
+
+.p-staff .player-hero__inner{
+  display: grid;
+  grid-template-columns: min(240px, 22vw) 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.p-staff .player-hero__photo{
+  width: clamp(180px, 22vw, 240px);
+  height: auto;
+  max-height: clamp(180px, 22vw, 240px);
+  object-fit: contain;
+  border-radius: 14px;
+  border: 1px solid var(--c-border);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  display: block;
+  background: transparent;
+}
+
+.p-staff .player-hero__name{
+  margin: 0;
+  font-family: var(--ff-cond);
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  line-height: 1.1;
+  letter-spacing: .02em;
+}
+
+.p-staff .player-hero__top{ display:flex; align-items:baseline; gap:.6rem; margin-bottom:.25rem; }
+.p-staff .player-hero__meta{ display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .6rem; color:var(--c-muted); }
+.p-staff .dot{ width:5px; height:5px; background:var(--c-muted); border-radius:50%; display:inline-block; }
+.p-staff .player-hero__contacts{ margin-top:.45rem; }
+.p-staff .player-hero__contacts .link{ opacity:.95; }
+
+/* role badge – decentnější než u hráčů */
+.p-staff .badge--role{
+  display:inline-flex; align-items:center;
+  padding:.22rem .5rem; border-radius:999px; font-weight:800;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--c-text);
+  text-transform:none; letter-spacing:.02em;
+}
+
+/* Info grid (přebírá base.css, jen spacing) */
+.p-staff .info-grid{ margin-top:.5rem; }
+.p-staff .info-row + .info-row{ margin-top:.25rem; }
+
+@media (max-width: 720px){
+  .p-staff .player-hero__inner{ grid-template-columns: 1fr; }
+  .p-staff .player-hero__photo{ width:180px; height:180px; margin-inline:auto; }
+  .p-staff .player-hero__top{ justify-content:center; }
+  .p-staff .player-hero__meta,
+  .p-staff .player-hero__contacts{ justify-content:center; text-align:center; }
+}
+/* delší texty v popisu funkce – zachovat zalomení řádků */
+.p-staff .prose { white-space: pre-wrap; }
+
+/* Kontakt – lokální doplňky k existujícím stylům */
+.stadium__wrap { display: grid; gap: .75rem; }
+.stadium__media { max-width: 640px; }
+.stadium__photo {
+  width: 100%; height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--c-border, #1f242b);
+  box-shadow: var(--shadow, 0 10px 30px rgba(0,0,0,.35));
+  background: rgba(255,255,255,.04);
+}
+
+.contact-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.contact-actions .btn { white-space: nowrap; }
+
+/* drobná tečka mezi kontakty (už existuje i jinde, tady pro jistotu) */
+.dot{ width:4px; height:4px; display:inline-block; background: currentColor; border-radius:50%; opacity:.6; margin: 0 .35rem; }
+/* === Kontakt – lokální doplňky ======================================= */
+
+/* mapa / foto */
+.stadium__map,
+.stadium__photo{
+  width: 100%;
+  height: 340px;          /* pro iframe mapy */
+  max-width: 640px;
+  border: 1px solid var(--c-border, #1f242b);
+  border-radius: 12px;
+  box-shadow: var(--shadow, 0 10px 30px rgba(0,0,0,.35));
+  background: rgba(255,255,255,.04);
+}
+.stadium__photo{ height: auto; }
+
+/* klubové kontakty – tlačítka vedle sebe */
+.contact-actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+.contact-actions .btn { white-space: nowrap; }
+
+/* jednořádkový seznam kontaktů */
+.contact-list { display:flex; flex-direction:column; gap:.5rem; }
+.contact-row{
+  display:flex; align-items:center; justify-content:space-between;
+  gap: 1rem;
+  padding: .6rem .8rem;
+  border: 1px solid var(--c-border, #1f242b);
+  border-radius: 12px;
+  background: rgba(255,255,255,.04);
+}
+.c-name{ display:flex; align-items:baseline; gap:.5rem; }
+.link-strong{ font-weight:800; text-decoration:none; }
+.c-role{ color:var(--c-muted); font-weight:700; }
+
+.c-contact{ display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
+.dot{ width:4px; height:4px; display:inline-block; background: currentColor; border-radius:50%; opacity:.6; margin: 0 .1rem; }
+
+@media (max-width: 680px){
+  .contact-row{ flex-direction:column; align-items:flex-start; }
+}

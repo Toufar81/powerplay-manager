@@ -1,20 +1,42 @@
 {% extends "portal/base.html" %}
+{% load static %}
 
 {% block title %}Účet | Portál{% endblock %}
 
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'portal/css/account.css' %}">
+{% endblock %}
+
 {% block content %}
-  <section class="section">
+  <section class="section p-account">
     <div class="container">
       <h1 class="section__title">Nastavení účtu</h1>
 
       <div class="card mt-2">
         <h2 class="card__title">Můj profil</h2>
+
+        <!-- Jména pouze ke čtení (z DB) -->
+        <div class="mt-2" style="display:grid; gap:.6rem; max-width:460px;">
+          <p>
+            <label><strong>Křestní jméno:</strong></label>
+            <span class="static-field">{{ account_first_name|default:"—" }}</span>
+          </p>
+          <p>
+            <label><strong>Příjmení:</strong></label>
+            <span class="static-field">{{ account_last_name|default:"—" }}</span>
+          </p>
+        </div>
+
+        <!-- Form: upravit pouze e-mail -->
         <form method="post" class="mt-2" action="{% url 'portal:account' %}">
           {% csrf_token %}
           <input type="hidden" name="action" value="profile" />
           <div style="display:grid; gap:.6rem; max-width:460px;">
-            {{ profile_form.as_p }}
-            <button class="btn" type="submit">Uložit e‑mail</button>
+            <p>
+              <label for="{{ profile_form.email.id_for_label }}"><strong>{{ profile_form.email.label }}</strong></label>
+              {{ profile_form.email }}
+            </p>
+            <button class="btn" type="submit">Uložit e-mail</button>
           </div>
         </form>
       </div>

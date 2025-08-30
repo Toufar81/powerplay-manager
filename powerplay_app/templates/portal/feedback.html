@@ -1,12 +1,18 @@
 {% extends "portal/base.html" %}
+{% load static %}
 {% block title %}Připomínky | Portál{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'portal/css/feedback.css' %}">
+{% endblock %}
+
 {% block content %}
-<section class="section">
+<section class="section p-feedback">
   <div class="container">
     <h1 class="section__title">Připomínky k zápasům / událostem</h1>
 
     <div class="card mt-2">
+      <h2 class="card__title">Nová připomínka</h2>
       <form method="post">
         {% csrf_token %}
         <div style="display:grid; gap:.6rem; max-width:740px;">
@@ -32,7 +38,8 @@
     </div>
 
     <div class="card mt-3">
-      <ul class="clean-list">
+      <h2 class="card__title">Poslední připomínky</h2>
+      <ul class="clean-list fb-list">
         {% for fb in items %}
           <li style="border-top:1px solid var(--c-border); padding:.6rem 0;">
             <div class="muted" style="font-size:.9rem;">

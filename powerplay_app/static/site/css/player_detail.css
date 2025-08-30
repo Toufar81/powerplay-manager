@@ -1,0 +1,171 @@
+/* === Player detail (scoped .p-player) ================================== */
+
+/* lokální defaulty pro ikonky výsledku */
+.p-player{
+  --c-success: #4caf50;
+  --c-danger:  #ff5252;
+}
+
+
+/* HERO */
+.p-player .player-hero{
+  padding: clamp(1.4rem, 3vw, 2.2rem) 0;
+  border-bottom: 1px solid var(--c-border);
+  background:
+    radial-gradient(700px 300px at 90% 0%, rgba(255,209,0,.08), transparent 60%),
+    radial-gradient(600px 250px at 10% 0%, rgba(255,209,0,.12), transparent 60%);
+}
+
+.p-player .player-hero__inner{
+  display: grid;
+  grid-template-columns: min(240px, 22vw) 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Foto – celá bez ořezu, žlutý lem, žádné „pruhy“ */
+.p-player .player-hero__photo{
+  width: clamp(180px, 22vw, 240px);
+  height: auto;                              /* ← už nečtverec */
+  max-height: clamp(180px, 22vw, 240px);
+
+  object-fit: contain;                       /* zobraz celou fotku */
+  object-position: 50% 50%;
+  background: transparent;                   /* žádné šedé pozadí */
+  padding: 0;
+
+  border-radius: 14px;
+  border: 2px solid var(--c-primary);        /* žlutý lem */
+  box-shadow: 0 0 0 2px rgba(255,184,28,.35),
+              0 10px 30px rgba(0,0,0,.35);
+  display: block;
+}
+
+@media (max-width: 720px){
+  .p-player .player-hero__photo{ margin-inline: auto; }
+}
+
+/* Texty a meta */
+.p-player .player-hero__name{
+  margin: 0;
+  font-family: var(--ff-cond);
+  font-size: clamp(1.6rem, 3.6vw, 2.2rem);
+  line-height: 1.1;
+  letter-spacing: .02em;
+}
+.p-player .player-hero__top{
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  margin-bottom: .25rem;
+}
+.p-player .player-hero__meta{
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .35rem .6rem;
+  color: var(--c-muted);
+}
+.p-player .dot{ width: 5px; height: 5px; background: var(--c-muted); border-radius: 50%; display: inline-block; }
+
+/* Kontakty + akce */
+.p-player .player-hero__contacts{ margin-top: .45rem; }
+.p-player .player-hero__contacts .link{ opacity: .95; }
+.p-player .player-hero__actions{ margin-top: .65rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* Komponenty použité jen tady */
+.p-player .jersey{
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 34px; height: 28px; padding: 0 .4rem;
+  border-radius: 8px; font-weight: 900; letter-spacing: .02em;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--c-border);
+  color: var(--c-primary);
+  box-shadow: var(--shadow);
+}
+.p-player .jersey--xl{ height: 32px; min-width: 40px; font-size: 1.05rem; }
+
+.p-player .badge{
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .22rem .5rem; border-radius: 999px; font-weight: 800;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--c-text);
+  text-transform: none;
+  letter-spacing: .02em;
+}
+
+.p-player .pill{
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .45rem .8rem; border-radius: 999px; font-weight: 900;
+  background: var(--c-primary); color: #111; text-decoration: none;
+  border: 1px solid rgba(255,184,28,.75);
+}
+.p-player .pill:hover{ filter: brightness(.98); transform: translateY(-1px); transition: transform .08s ease, filter .12s ease; }
+
+/* Info grid už bere vzhled z base.css – jen drobné sjednocení šířky */
+.p-player .info-grid{ margin-top: .5rem; }
+
+/* Responzivně */
+@media (max-width: 720px){
+  .p-player .player-hero__inner{ grid-template-columns: 1fr; }
+  .p-player .player-hero__photo{ width: 180px; height: 180px; margin-inline: auto; }
+  .p-player .player-hero__top{ justify-content: center; }
+  .p-player .player-hero__meta,
+  .p-player .player-hero__contacts,
+  .p-player .player-hero__actions{ justify-content: center; text-align: center; }
+}
+
+/* --- mini stat chips --- */
+.p-player .stat-line{ display:flex; flex-wrap:wrap; gap:.5rem .7rem; margin-top:.6rem; }
+.p-player .stat{ display:inline-flex; align-items:center; gap:.35rem;
+  padding:.32rem .6rem; border-radius:999px; border:1px solid var(--c-border);
+  background:rgba(255,255,255,.06); box-shadow: var(--shadow); }
+.p-player .stat .k{ font-weight:800; letter-spacing:.02em; color:var(--c-muted); }
+.p-player .stat .v{ font-weight:900; }
+
+/* --- filtry --- */
+.p-player .cmp-switch{display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0 0;}
+.p-player .pill--ghost{background:transparent;color:var(--c-text);border:1px solid var(--c-border);box-shadow:none;}
+.p-player .pill--active{background:var(--c-primary);color:#111;border-color:rgba(255,184,28,.75);}
+
+/* --- tabulka zápasů --- */
+.p-player .stats-table{width:100%;border-collapse:collapse;margin-top:.8rem;}
+.p-player .stats-table th,
+.p-player .stats-table td{
+  padding:.5rem .6rem;
+  border-bottom:1px solid var(--c-border);
+  vertical-align:middle;
+}
+.p-player .stats-table th{font-size:.95rem;text-align:left;color:var(--c-muted);}
+
+/* zarovnání číselných hlaviček i buněk na stejnou hranu */
+.p-player .stats-table th.num,
+.p-player .stats-table td.num{
+  text-align:right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Soutěž – název ligy/turnaje vedle labelu */
+.p-player .stats-table td:nth-child(2){
+  white-space: normal;            /* povolí zalomení dlouhých názvů */
+}
+.p-player .stats-table td:nth-child(2) .muted{
+  display:inline-block;
+  margin-left:.4rem;              /* mezera před „— Název …“ */
+  font-size:.9em;                 /* lehce menší než hlavní label */
+  color:var(--c-muted);           /* tlumená barva */
+}
+
+/* ostatní drobnosti */
+.p-player .stats-table .opp{white-space:nowrap;}
+.p-player .result{font-weight:800;letter-spacing:.02em;}
+.p-player .result--W{color:var(--c-success, #4caf50);}
+.p-player .result--L{color:var(--c-danger, #ff5252);}
+.p-player .result--D{color:var(--c-muted);}
+.p-player .stats-table a{color:inherit;text-decoration:none;}
+.p-player .stats-table a:hover{text-decoration:underline;}
+
+/* mobil: schová soutěž (včetně názvu ligy) pro úsporu místa */
+@media(max-width:720px){
+  .p-player .stats-table th:nth-child(2),
+  .p-player .stats-table td:nth-child(2){display:none;}
+}
