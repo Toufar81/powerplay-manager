@@ -17,9 +17,21 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.db.models import Count, Sum, Value, F, Q
-from django.db.models.functions import Coalesce
+from django.db.models import  F
+
 from django.db.models.query import QuerySet
+
+from django.core.cache import cache
+
+from django.conf import settings
+
+from django.db.models import F, Count, Sum, Value, Q, IntegerField, Subquery, OuterRef
+from django.db.models.functions import Coalesce
+
+from powerplay_app.models.games import GameNomination, GameCompetition
+from powerplay_app.models.core import League  # pokud je League jinde, uprav import
+
+CACHE_TTL = 5
 
 from powerplay_app.models import (
     Game,
@@ -42,63 +54,43 @@ __all__ = [
 
 
 def player_season_totals_qs(team: Team) -> QuerySet[PlayerSeasonTotals]:
-    """Return annotated season totals for players of a given team.
+    base_qs: QuerySet[PlayerSeasonTotals] = PlayerSeasonTotals.objects.filter(team=team)
 
-    The query mirrors the admin proxy aggregations so it can be reused on the
-    public frontend without duplicating logic.
-
-    Annotations:
-        - ``games_played``: distinct count of nominated games.
-        - ``goals`` / ``assists`` / ``points`` / ``penalty_minutes``.
-        - ``goals_against``: computed from game scores for goalies assigned to
-          line 0 (slot ``G``), split by home/away side.
-
-    Args:
-        team (Team): Team whose players should be aggregated.
-
-    Returns:
-        QuerySet[PlayerSeasonTotals]: Players with additional annotation fields.
-
-    Side Effects:
-        None. The returned queryset is lazily evaluated and does not modify the
-        database until acted upon.
-
-    Raises:
-        None.
-    """
-    qs: QuerySet[PlayerSeasonTotals] = PlayerSeasonTotals.objects.filter(team=team)
-
-    qs = qs.annotate(
-        games_played=Coalesce(Count("nominations__game", distinct=True), Value(0)),
-        goals=Coalesce(Count("goals_scored"), Value(0)),
-        assists=Coalesce(Count("assists_primary") + Count("assists_secondary"), Value(0)),
-        penalty_minutes=Coalesce(Sum("penalty__minutes"), Value(0)),
-    ).annotate(points=F("goals") + F("assists"))
-
-    ga_home = Coalesce(
-        Sum(
-            "lineassignment__line__game__score_away",
-            filter=Q(
-                lineassignment__slot=LineSlot.G,
-                lineassignment__line__line_number=0,
-                lineassignment__line__game__home_team=F("team"),
-            ),
-        ),
-        Value(0),
+    # GP z nominací (distinct game) – samostatný subdotaz
+    gp_sq = (
+        GameNomination.objects
+        .filter(player=OuterRef("pk"))
+        .values("player")
+        .annotate(gp=Count("game", distinct=True))
+        .values("gp")[:1]
     )
-    ga_away = Coalesce(
-        Sum(
-            "lineassignment__line__game__score_home",
-            filter=Q(
-                lineassignment__slot=LineSlot.G,
-                lineassignment__line__line_number=0,
-                lineassignment__line__game__away_team=F("team"),
-            ),
-        ),
-        Value(0),
+
+    # Agregace z PlayerStats – jeden „derived“ subquery, ze kterého si vytáhneme 4 hodnoty
+    ps_sq = (
+        PlayerStats.objects
+        .filter(player=OuterRef("pk"))
+        .values("player")
+        .annotate(
+            g=Coalesce(Sum("goals"), 0),
+            a=Coalesce(Sum("assists"), 0),
+            pim=Coalesce(Sum("penalty_minutes"), 0),
+            ga=Coalesce(Sum("goals_against"), 0),
+        )
     )
-    qs = qs.annotate(goals_against=ga_home + ga_away)
+
+    qs = (
+        base_qs
+        .annotate(
+            games_played=Coalesce(Subquery(gp_sq, output_field=IntegerField()), Value(0)),
+            goals=Coalesce(Subquery(ps_sq.values("g")[:1], output_field=IntegerField()), Value(0)),
+            assists=Coalesce(Subquery(ps_sq.values("a")[:1], output_field=IntegerField()), Value(0)),
+            penalty_minutes=Coalesce(Subquery(ps_sq.values("pim")[:1], output_field=IntegerField()), Value(0)),
+            goals_against=Coalesce(Subquery(ps_sq.values("ga")[:1], output_field=IntegerField()), Value(0)),
+        )
+        .annotate(points=F("goals") + F("assists"))
+    )
     return qs
+
 
 
 def games_for_team(team: Team) -> QuerySet[Game]:
@@ -125,57 +117,33 @@ def games_for_team(team: Team) -> QuerySet[Game]:
 
 
 def recompute_game(game: Game) -> None:
-    """Recompute a game's score and per-player stats from atomic events.
+    """Statistics helpers and recomputation routines.
 
-    What is recomputed:
-        - Game score (from ``Goal`` events per team).
-        - ``PlayerStats`` for the given game: goals, assists, points,
-          penalty minutes, and goals against for goalies on line 0.
-
-    Constraints/assumptions:
-        - Goalie GA is assigned to players occupying slot ``G`` in line 0 for
-          that game. Empty slots are ignored.
-        - If a player appears multiple times as goalie for the same game
-          (misconfiguration), the last save wins but the value is identical.
-
-    Args:
-        game (Game): Game instance whose statistics should be recomputed.
-
-    Returns:
-        None: The function updates the database in place.
-
-    Side Effects:
-        Persists updated ``Game`` scores and ``PlayerStats`` records to the
-        database.
-
-    Raises:
-        None.
+    Provided utilities:
+        - player_season_totals_qs – annotated totals for public FE.
+        - games_for_team – helper to list a team's games (home/away).
+        - recompute_game – recompute per-game PlayerStats from events; GAME SCORE
+          IS NOT TOUCHED (score is the single source of truth).
     """
+
     home_id = game.home_team_id
     away_id = game.away_team_id
 
-    # --- Score ---
-    goals_per_team = (
-        Goal.objects.filter(game=game).values("team").annotate(cnt=Count("id"))
-    )
-    score_map: dict[int | None, int] = {row["team"]: row["cnt"] for row in goals_per_team}
-    game.score_home = score_map.get(home_id, 0)
-    game.score_away = score_map.get(away_id, 0)
-    game.save(update_fields=["score_home", "score_away"])
-
-    # --- Reset per-game stats ---
+    # Reset existujících per-game stats
     PlayerStats.objects.filter(game=game).update(
         points=0, goals=0, assists=0, penalty_minutes=0, goals_against=0
     )
 
-    # --- Goals ---
+    # Góly
     for row in Goal.objects.filter(game=game).values("scorer").annotate(c=Count("id")):
+        if row["scorer"] is None:
+            continue
         stats, _ = PlayerStats.objects.get_or_create(player_id=row["scorer"], game=game)
         stats.goals = row["c"]
         stats.points = (stats.goals or 0) + (stats.assists or 0)
         stats.save(update_fields=["goals", "points"])
 
-    # --- Assists (primary + secondary) ---
+    # Asistence (primární + sekundární)
     for field in ("assist_1", "assist_2"):
         assist_qs = (
             Goal.objects.filter(game=game, **{f"{field}__isnull": False})
@@ -183,29 +151,172 @@ def recompute_game(game: Game) -> None:
             .annotate(c=Count("id"))
         )
         for row in assist_qs:
-            stats, _ = PlayerStats.objects.get_or_create(player_id=row[field], game=game)
+            pid = row[field]
+            if pid is None:
+                continue
+            stats, _ = PlayerStats.objects.get_or_create(player_id=pid, game=game)
             stats.assists = (stats.assists or 0) + row["c"]
             stats.points = (stats.goals or 0) + (stats.assists or 0)
             stats.save(update_fields=["assists", "points"])
 
-    # --- Penalty minutes ---
+    # Trestné minuty
     for row in Penalty.objects.filter(game=game).values("penalized_player").annotate(mins=Sum("minutes")):
-        stats, _ = PlayerStats.objects.get_or_create(player_id=row["penalized_player"], game=game)
-        stats.penalty_minutes = row.get("mins") or 0
+        pid = row["penalized_player"]
+        if pid is None:
+            continue
+        stats, _ = PlayerStats.objects.get_or_create(player_id=pid, game=game)
+        stats.penalty_minutes = int(row.get("mins") or 0)
         stats.save(update_fields=["penalty_minutes"])
 
-    # --- Goals against for goalies on line 0 (slot G) ---
+    # Goals Against pro gólmany (line 0, slot G) – z RUČNÍHO skóre
     goalies = (
-        LineAssignment.objects.filter(line__game=game, line__line_number=0, slot=LineSlot.G)
+        LineAssignment.objects
+        .filter(line__game=game, line__line_number=0, slot=LineSlot.G)
         .select_related("player", "line__team")
     )
-
     for la in goalies:
         player: Player | None = getattr(la, "player", None)
         if not player or player.position != "goalie":
-            # Empty slot or non-goalie assigned; ignore to avoid crashes.
             continue
         conceded = game.score_away if la.line.team_id == home_id else game.score_home
         stats, _ = PlayerStats.objects.get_or_create(player=player, game=game)
-        stats.goals_against = conceded
+        stats.goals_against = int(conceded or 0)
         stats.save(update_fields=["goals_against"])
+
+    # Invalidační úklid cache souhrnů (bezpečně pro dotčené hráče + možné ligy)
+    affected_player_ids = list(PlayerStats.objects.filter(game=game).values_list("player_id", flat=True))
+    possible_leagues = {
+        game.league_id,
+        getattr(game.home_team, "league_id", None),
+        getattr(game.away_team, "league_id", None),
+        None,
+    }
+    invalidate_player_totals_cache(affected_player_ids, possible_leagues)
+
+
+def resolve_season_window(team: Team) -> tuple[League | None, Any | None, Any | None]:
+    """Vrátí (liga, date_start, date_end) pro tým.
+    - Primárně vezme team.league.
+    - Fallback: poslední ligový zápas týmu → jeho liga.
+    - Když nic, vrátí (None, None, None) – tzn. bez datového filtru.
+    """
+    if getattr(team, "league_id", None):
+        lg = team.league
+        return lg, getattr(lg, "date_start", None), getattr(lg, "date_end", None)
+
+    last_league_game = (
+        Game.objects
+        .filter(Q(home_team=team) | Q(away_team=team), competition=GameCompetition.LEAGUE)
+        .exclude(league__isnull=True)
+        .select_related("league")
+        .order_by("-starts_at")
+        .first()
+    )
+    if last_league_game and last_league_game.league_id:
+        lg = last_league_game.league
+        return lg, getattr(lg, "date_start", None), getattr(lg, "date_end", None)
+
+    return None, None, None
+
+
+def get_player_totals_from_playerstats(
+    player: Player,
+    *,
+    season_league: League | None,
+    competitions: str = "league",  # 'league' | 'tournament' | 'friendly' | 'all'
+) -> dict:
+    """Souhrnné statistiky hráče z PlayerStats + GP z nominací.
+    Respektuje soutěž (league/tournament/friendly/all) a (pokud známe) okno sezóny.
+
+    Skater: {gp, g, a, pts, pim}
+    Goalie: {gp, ga, g, a, pim}
+    """
+    comp = (competitions or "league").lower()
+    if comp not in {"league", "tournament", "friendly", "all"}:
+        comp = "league"
+
+    # Filtry na hry (použijeme je jak pro GP, tak pro PlayerStats)
+    game_filters = Q()
+    if comp != "all":
+        game_filters &= Q(game__competition=comp)
+
+    # pro 'league' navíc fixujeme konkrétní ligu (když je)
+    if comp == "league" and season_league:
+        game_filters &= Q(game__league=season_league)
+
+    # datové okno ligy – používáme pro vše, co není 'league', jen pokud ho známe
+    # (tj. tournament/friendly/all se omezí na interval ligové sezóny, když máme ligu)
+    # U 'league' to není nutné – liga je určena vazbou přes game__league.
+    if comp != "league" and season_league and getattr(season_league, "date_start", None) and getattr(season_league, "date_end", None):
+        game_filters &= Q(game__starts_at__date__gte=season_league.date_start,
+                          game__starts_at__date__lte=season_league.date_end)
+
+    # --- GP z nominací (distinct přes game)
+    gp = (
+        GameNomination.objects
+        .filter(player=player)
+        .filter(game_filters)
+        .values("game")
+        .distinct()
+        .count()
+    )
+
+    # --- součty z PlayerStats
+    ps_qs = PlayerStats.objects.filter(player=player).filter(game_filters)
+
+    agg = ps_qs.aggregate(
+        g=Coalesce(Sum("goals"), Value(0)),
+        a=Coalesce(Sum("assists"), Value(0)),
+        pim=Coalesce(Sum("penalty_minutes"), Value(0)),
+        ga=Coalesce(Sum("goals_against"), Value(0)),
+    )
+
+    g = int(agg["g"] or 0)
+    a = int(agg["a"] or 0)
+    pim = int(agg["pim"] or 0)
+    ga = int(agg["ga"] or 0)
+    pts = g + a
+
+    # výsledek podle pozice
+    if getattr(player, "position", "") == "goalie":
+        data = {"gp": gp, "ga": ga, "g": g, "a": a, "pim": pim}
+    else:
+        data = {"gp": gp, "g": g, "a": a, "pts": pts, "pim": pim}
+
+    return data
+
+# Klíčujeme podle hráče, ligy v sezónním okně a přepínače soutěže
+_COMP_KEYS = ("league", "tournament", "friendly", "all")
+
+def _totals_cache_key(player_id: int, league_id: int | str, cmp: str) -> str:
+    return f"playerstats:totals:v1:{player_id}:{league_id}:{cmp}"
+
+def invalidate_player_totals_cache(player_ids: list[int] | set[int],
+                                   league_ids: list[int | None] | set[int | None] = (None,)) -> None:
+    """
+    Smaže cache pro zadané hráče a (možné) ligy. Pro jistotu pro všechny 'cmp'.
+    league_id=None reprezentujeme řetězcem 'none'.
+    """
+    if not player_ids:
+        return
+    lids = [("none" if lid is None else int(lid)) for lid in league_ids]
+    keys = []
+    for pid in set(player_ids):
+        for lid in set(lids):
+            for cmp in _COMP_KEYS:
+                keys.append(_totals_cache_key(pid, lid, cmp))
+    cache.delete_many(keys)
+
+
+def cached_player_totals(player: Player, *, season_league: League | None, competitions: str) -> dict:
+    if getattr(settings, "DEBUG", False):
+        return get_player_totals_from_playerstats(player, season_league=season_league, competitions=competitions)
+
+    lid = getattr(season_league, "id", "none")
+    key = _totals_cache_key(player.id, lid, (competitions or "league").lower())
+    return cache.get_or_set(
+        key,
+        lambda: get_player_totals_from_playerstats(player, season_league=season_league, competitions=competitions),
+        CACHE_TTL,
+    )
+

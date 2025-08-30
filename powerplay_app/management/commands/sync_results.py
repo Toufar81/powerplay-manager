@@ -42,7 +42,9 @@ from django.db import transaction
 from django.utils import timezone
 from playwright.sync_api import sync_playwright
 
-from powerplay_app.models import League, Team, Stadium
+from powerplay_app.models import League, Team, Stadium, Goal
+from powerplay_app.services.stats import recompute_game
+
 from powerplay_app.models.games import Game, GameCompetition
 
 
@@ -302,6 +304,42 @@ class Command(BaseCommand):
         def _sync() -> None:
             nonlocal created_games, updated_games
 
+            def prune_goals_to_score(game: Game) -> None:
+                """
+                Delete extra Goal events if they exceed the manual score on the Game.
+                Keeps the newest goals (dle period/second/id) a maže přebytky.
+                """
+                if not (game.home_team_id and game.away_team_id):
+                    return
+
+                def _delete_excess(goals_qs, target_count: int) -> int:
+                    target = max(0, int(target_count or 0))
+                    total = goals_qs.count()
+                    extra = total - target
+                    if extra <= 0:
+                        return 0
+                    # nelze goals_qs[:extra].delete() → získáme PK a smažeme přes pk__in
+                    ids = list(goals_qs.values_list("id", flat=True)[:extra])
+                    if ids:
+                        Goal.objects.filter(id__in=ids).delete()
+                    return extra
+
+                # HOME: nejnovější góly jako přebytky
+                qs_home = (
+                    Goal.objects
+                    .filter(game=game, team=game.home_team)
+                    .order_by("-period", "-second_in_period", "-id")
+                )
+                _delete_excess(qs_home, game.score_home)
+
+                # AWAY: dtto
+                qs_away = (
+                    Goal.objects
+                    .filter(game=game, team=game.away_team)
+                    .order_by("-period", "-second_in_period", "-id")
+                )
+                _delete_excess(qs_away, game.score_away)
+
             for m in matches:
                 try:
                     starts_at = _iso_to_aware(m["match_date"])
@@ -355,6 +393,10 @@ class Command(BaseCommand):
                 else:
                     # When stadium is None in both old/new values, Django won't mark as changed — that's fine.
                     updated_games += 1
+
+                # Zarovnej počet Goal událostí na uložené skóre a přepočti PlayerStats
+                prune_goals_to_score(obj)
+                recompute_game(obj)
 
         _sync()
 

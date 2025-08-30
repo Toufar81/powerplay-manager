@@ -82,6 +82,7 @@ class Stadium(models.Model):
     name = models.CharField("Název stadionu", max_length=255)
     address = models.CharField("Adresa", max_length=255, blank=True, null=True)
     map_url = models.URLField("Mapa", blank=True, null=True)
+    photo = models.ImageField("Foto stadionu", upload_to="stadiums/", blank=True, null=True)
 
     class Meta:
         verbose_name = "Stadion"
@@ -130,6 +131,8 @@ class Team(models.Model):
     )
     logo = models.ImageField("Logo týmu", upload_to="team_loga/", blank=True, null=True)
     staff_notes = models.TextField("Poznámky k realizačnímu týmu", blank=True, null=True)
+    public_email = models.EmailField("Obecný e-mail", blank=True, null=True)
+    website_url = models.URLField("Web klubu", blank=True, null=True)
 
     class Meta:
         verbose_name = "Tým"

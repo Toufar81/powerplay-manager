@@ -1,0 +1,98 @@
+/* === Kontakt – stadion layout (INFO nahoře; dole foto vlevo, mapa vpravo) === */
+.stadium{
+  display: grid;
+  grid-template-columns: 1fr 1fr;              /* dvě stejné kolony */
+  grid-template-areas:
+    "title title"
+    "info  info"
+    "photo map"
+    "empty open";
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Titulek přes oba sloupce */
+.stadium .card__title{
+  grid-area: title;
+  margin: 0 0 .25rem 0;
+}
+
+/* --- INFO nahoře: 3 boxy v jednom řádku --- */
+.info-top{
+  grid-area: info;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem;
+}
+.info-top__item{
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: .18rem;
+  padding: .55rem .7rem;
+  border: 1px solid var(--c-border, #1f242b);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+}
+.info-top__k{ opacity:.75; font-size:.88rem; }
+.info-top__v{
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Foto a mapa (16:9), sjednocený vzhled --- */
+.stadium__photo,
+.stadium__map{
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  border: 1px solid var(--c-border, #1f242b);
+  box-shadow: var(--shadow, 0 10px 30px rgba(0,0,0,.35));
+  background: rgba(255,255,255,.04);
+}
+.stadium__photo{ grid-area: photo; object-fit: cover; object-position: center; }
+.stadium__map  { grid-area: map; border: 0; }
+
+.stadium__open{
+  grid-area: open;
+  margin: 0;                 /* žádná extra mezera – sedí pod mapou */
+  justify-self: start;
+}
+
+/* === Klubové kontakty – pilly jako u hráčů (už sjednoceno) === */
+.contact-actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+.contact-actions .filter__link { white-space: nowrap; }
+
+/* === Kontaktní osoby – výraznější řádek, jméno/role vlevo, kontakt vpravo === */
+.contact-list { display:flex; flex-direction:column; gap:.45rem; }
+.contact-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem 1rem;
+  padding:.65rem .8rem;
+  border:1px solid var(--c-border, #1f242b);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+}
+.c-name{ display:flex; align-items:baseline; gap:.5rem; }
+.link-strong{ font-weight:900; text-decoration:none; letter-spacing:.01em; }
+.c-role{
+  font-weight:800;
+  color: var(--c-primary);
+  background: rgba(255,184,28,.12);
+  border: 1px solid rgba(255,184,28,.35);
+  padding: .12rem .45rem;
+  border-radius: .6rem;
+}
+.c-contact{ display:flex; align-items:center; gap:.35rem; color:var(--c-muted); flex-wrap:wrap; }
+.dot{ width:4px; height:4px; display:inline-block; background: currentColor; border-radius:50%; opacity:.6; margin: 0 .35rem; }
+
+/* Responsivita */
+@media (max-width: 900px){
+  .info-top{ grid-template-columns: 1fr; }     /* info pod sebe */
+}
+@media (max-width: 720px){
+  .contact-row{ flex-direction: column; align-items: flex-start; }
+}
