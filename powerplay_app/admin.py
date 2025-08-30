@@ -12,8 +12,11 @@ from typing import Any
 from functools import lru_cache
 
 import nested_admin
-from django.db.models import IntegerField, Subquery, OuterRef
-from django.db.models.functions import Coalesce
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.utils.text import slugify
+from unicodedata import normalize as _u_norm, combining as _u_comb
+
 from django import forms
 from django.conf import settings
 from .models.wallet import WalletCategory, WalletTransaction
@@ -100,6 +103,165 @@ def regenerate_calendar_events(modeladmin: Any, request: Any, queryset: Any) -> 
         _sync_event_for_game(g, create_if_missing=True)
     modeladmin.message_user(request, f"Hotovo. Zpracováno {queryset.count()} zápasů.")
 
+# ------------------------------------------------------------
+# User-linking helpers (name normalization, username building)
+# ------------------------------------------------------------
+def _strip_accents(s: str) -> str:
+    if not s:
+        return ""
+    return "".join(ch for ch in _u_norm("NFKD", s) if not _u_comb(ch))
+
+def _norm_name(s: str) -> str:
+    s = " ".join((s or "").split())
+    s = _strip_accents(s).lower()
+    return "".join(ch for ch in s if ch.isalnum())
+
+def _norm_pair(first: str, last: str) -> tuple[str, str]:
+    return (_norm_name(first), _norm_name(last))
+
+def _build_user_index():
+    User = get_user_model()
+    idx: dict[tuple[str, str], list] = {}
+    for u in User.objects.only("id", "first_name", "last_name"):
+        f, l = _norm_pair(u.first_name, u.last_name)
+        if f and l:
+            idx.setdefault((f, l), []).append(u)
+    return idx
+
+def _unique_username(base: str) -> str:
+    User = get_user_model()
+    base = (base or "user").strip() or "user"
+    cand = base
+    i = 1
+    while User.objects.filter(username__iexact=cand).exists():
+        cand = f"{base}{i}"
+        i += 1
+    return cand
+
+def _username_base_from(first: str, last: str, fallback: str) -> str:
+    base = slugify(f"{first}.{last}") or fallback
+    return base[:150]
+
+def _ensure_group(name: str):
+    grp, _ = Group.objects.get_or_create(name=name)
+    return grp
+
+# ------------------------------------------------------------
+# Admin actions: link/create/unlink + grant/revoke admin
+# ------------------------------------------------------------
+from django.contrib import messages
+
+@admin.action(description="Propojit podle jména (first+last)")
+def link_users_by_name_for_players(modeladmin, request, queryset):
+    user_idx = _build_user_index()
+    ok, skipped = 0, []
+    for p in queryset.select_related("user"):
+        if p.user_id:
+            skipped.append(f"{p}: už má vazbu"); continue
+        fn, ln = _norm_pair(p.first_name, p.last_name)
+        if not fn or not ln:
+            skipped.append(f"{p}: prázdné jméno/příjmení"); continue
+        candidates = user_idx.get((fn, ln), [])
+        if len(candidates) != 1:
+            skipped.append(f"{p}: kandidátů={len(candidates)} (očekáváno 1)"); continue
+        u = candidates[0]
+        if getattr(u, "player_profile", None) and u.player_profile_id != p.id:
+            skipped.append(f"{p}: účet už napojen na jiného hráče"); continue
+        p.user = u
+        p.save(update_fields=["user"])
+        ok += 1
+    modeladmin.message_user(request, f"Propojeno: {ok}. Přeskočeno: {len(skipped)}.")
+    for note in skipped[:20]:
+        modeladmin.message_user(request, f"• {note}", level=messages.INFO)
+
+@admin.action(description="Propojit podle jména (first+last)")
+def link_users_by_name_for_staff(modeladmin, request, queryset):
+    user_idx = _build_user_index()
+    ok, skipped = 0, []
+    for s in queryset.select_related("user"):
+        if s.user_id:
+            skipped.append(f"{s}: už má vazbu"); continue
+        fn, ln = _norm_pair(s.first_name, s.last_name)
+        if not fn or not ln:
+            skipped.append(f"{s}: prázdné jméno/příjmení"); continue
+        candidates = user_idx.get((fn, ln), [])
+        if len(candidates) != 1:
+            skipped.append(f"{s}: kandidátů={len(candidates)} (očekáváno 1)"); continue
+        u = candidates[0]
+        if getattr(u, "staff_profile", None) and u.staff_profile_id != s.id:
+            skipped.append(f"{s}: účet už napojen na jiného staff"); continue
+        s.user = u
+        s.save(update_fields=["user"])
+        ok += 1
+    modeladmin.message_user(request, f"Propojeno: {ok}. Přeskočeno: {len(skipped)}.")
+    for note in skipped[:20]:
+        modeladmin.message_user(request, f"• {note}", level=messages.INFO)
+
+@admin.action(description="Vytvořit účet + přiřadit do skupiny player")
+def create_users_for_players(modeladmin, request, queryset):
+    User = get_user_model()
+    grp = _ensure_group("player")
+    ok = skipped = 0
+    for p in queryset.select_related("user"):
+        if p.user_id:
+            skipped += 1; continue
+        base = _username_base_from(p.first_name, p.last_name, fallback=f"player-{p.id or 'x'}")
+        username = _unique_username(base)
+        u = User(username=username, first_name=p.first_name or "", last_name=p.last_name or "", email=p.email or "")
+        u.set_unusable_password(); u.is_active = True; u.is_staff = False
+        u.save(); u.groups.add(grp)
+        p.user = u; p.save(update_fields=["user"]); ok += 1
+    modeladmin.message_user(request, f"Vytvořeno účtů: {ok}. Přeskočeno: {skipped}.")
+
+@admin.action(description="Vytvořit účet + přiřadit do skupiny staff")
+def create_users_for_staff(modeladmin, request, queryset):
+    User = get_user_model()
+    grp = _ensure_group("staff")
+    ok = skipped = 0
+    for s in queryset.select_related("user"):
+        if s.user_id:
+            skipped += 1; continue
+        base = _username_base_from(s.first_name, s.last_name, fallback=f"staff-{s.id or 'x'}")
+        username = _unique_username(base)
+        u = User(username=username, first_name=s.first_name or "", last_name=s.last_name or "", email=s.email or "")
+        u.set_unusable_password(); u.is_active = True; u.is_staff = False
+        u.save(); u.groups.add(grp)
+        s.user = u; s.save(update_fields=["user"]); ok += 1
+    modeladmin.message_user(request, f"Vytvořeno účtů: {ok}. Přeskočeno: {skipped}.")
+
+@admin.action(description="Odebrat vazbu na účet (ponechat účet)")
+def unlink_user_for_players(modeladmin, request, queryset):
+    cnt = 0
+    for p in queryset.select_related("user"):
+        if p.user_id:
+            p.user = None; p.save(update_fields=["user"]); cnt += 1
+    modeladmin.message_user(request, f"Odpojeno: {cnt} hráčů.")
+
+@admin.action(description="Odebrat vazbu na účet (ponechat účet)")
+def unlink_user_for_staff(modeladmin, request, queryset):
+    cnt = 0
+    for s in queryset.select_related("user"):
+        if s.user_id:
+            s.user = None; s.save(update_fields=["user"]); cnt += 1
+    modeladmin.message_user(request, f"Odpojeno: {cnt} členů RT.")
+
+@admin.action(description="Udělit admin přístup (is_staff=True) na navázaném účtu")
+def grant_admin_for_linked_users(modeladmin, request, queryset):
+    cnt = 0
+    for obj in queryset.select_related("user"):
+        u = getattr(obj, "user", None)
+        if u and not u.is_staff:
+            u.is_staff = True; u.save(update_fields=["is_staff"]); cnt += 1
+    modeladmin.message_user(request, f"Admin přístup udělen: {cnt} účtům.")
+
+@admin.action(description="Odebrat admin přístup (is_staff=False) na navázaném účtu")
+def revoke_admin_for_linked_users(modeladmin, request, queryset):
+    cnt = 0
+    for obj in queryset.select_related("user"):
+        u = getattr(obj, "user", None)
+        if u and u.is_staff:
+            u.is_staff = False; u.save(update_fields=["is_staff"]); cnt += 1
+    modeladmin.message_user(request, f"Admin přístup odebrán: {cnt} účtům.")
 
 # ------------------------------------------------------------
 # Simple registries
@@ -224,16 +386,18 @@ class TeamAdmin(admin.ModelAdmin):
 class StaffAdmin(admin.ModelAdmin):
     """Admin for staff entries with simple filters and ordering."""
 
+    actions = [
+        link_users_by_name_for_staff,
+        create_users_for_staff,
+        unlink_user_for_staff,
+
+    ]
+    raw_id_fields = ("user",)
+
     list_display = (
-        "first_name",
-        "last_name",
-        "role",
-        "team",
-        "phone",
-        "email",
-        "is_active",
-        "order",
+        "first_name", "last_name", "role", "team", "phone", "email", "is_active", "order", "user_short",
     )
+
     list_filter = ("is_active", "team__league", "team", "role")
     search_fields = (
         "first_name",
@@ -272,6 +436,11 @@ class StaffAdmin(admin.ModelAdmin):
             field.widget.attrs.update({"style": "min-width:260px;"})
         return field
 
+    @admin.display(description="Uživatel")
+    def user_short(self, obj):
+        u = getattr(obj, "user", None)
+        return getattr(u, "username", "—")
+
 
 # ------------------------------------------------------------
 # Player
@@ -279,6 +448,14 @@ class StaffAdmin(admin.ModelAdmin):
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     """Admin for players with photo preview helpers."""
+
+    actions = [
+        link_users_by_name_for_players,
+        create_users_for_players,
+        unlink_user_for_players,
+
+    ]
+    raw_id_fields = ("user",)
 
     list_display = (
         "first_name",
@@ -288,6 +465,7 @@ class PlayerAdmin(admin.ModelAdmin):
         "jersey_number",
         "photo_thumb",
     )
+
     list_filter = ("position", "team__league")
     search_fields = ("first_name", "last_name", "nickname", "email")
     readonly_fields = ("photo_preview",)
@@ -322,6 +500,11 @@ class PlayerAdmin(admin.ModelAdmin):
         )
 
     photo_preview.short_description = "Náhled fotky"
+
+    @admin.display(description="Uživatel")
+    def user_short(self, obj):
+        u = getattr(obj, "user", None)
+        return getattr(u, "username", "—")
 
 
 # ------------------------------------------------------------

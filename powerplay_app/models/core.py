@@ -20,6 +20,7 @@ from urllib.parse import quote
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.templatetags.static import static
+from django.conf import settings
 
 
 # --- League ----------------------------------------------------------------
@@ -190,6 +191,16 @@ class Player(models.Model):
     nickname = models.CharField("Přezdívka", max_length=50, blank=True, null=True)
     phone = models.CharField("Telefon", max_length=20, blank=True, null=True)
     email = models.EmailField("E-mail", blank=True, null=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="player_profile",
+        verbose_name="Uživatelský účet",
+        help_text="Propojení na účet v systému (login).",
+    )
+
     jersey_number = models.PositiveIntegerField("Číslo dresu")
     position = models.CharField("Pozice", max_length=50, choices=Position.choices)
     team = models.ForeignKey(

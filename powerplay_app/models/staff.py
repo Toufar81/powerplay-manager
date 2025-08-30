@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from django.core.validators import RegexValidator
 from django.db import models
+from django.conf import settings
 
 # Validator is defined at module scope for reuse and easier testing.
 phone_validator: RegexValidator = RegexValidator(
@@ -50,6 +51,15 @@ class Staff(models.Model):
     email = models.EmailField("E-mail", blank=True, null=True)
     photo = models.ImageField("Fotografie", upload_to="staff_photos/", blank=True, null=True)
     address = models.CharField("Adresa", max_length=255, blank=True, null=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="staff_profile",
+        verbose_name="Uživatelský účet",
+        help_text="Propojení na účet v systému (login).",
+    )
     is_active = models.BooleanField("Aktivní", default=True)
     order = models.PositiveIntegerField("Pořadí", default=0)
 
