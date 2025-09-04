@@ -1,0 +1,18 @@
+from powerplay_app.models import PlayerStats, Player
+p = Player.objects.get(pk=5)
+
+# Kolik PlayerStats řádků pro něj vůbec je?
+PlayerStats.objects.filter(player=p).count()
+
+# Jaké competition hodnoty se v těch řádcích vyskytují?
+list(
+  PlayerStats.objects.filter(player=p)
+  .values_list('game__competition', flat=True)
+  .distinct()
+)
+
+# Ukázka 5 řádků: co v nich skutečně je
+list(
+  PlayerStats.objects.filter(player=p)
+  .values('game_id','game__competition','game__league_id','goals','assists','penalty_minutes','goals_against')[:5]
+)

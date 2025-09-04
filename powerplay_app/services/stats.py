@@ -134,6 +134,22 @@ def recompute_game(game: Game) -> None:
         points=0, goals=0, assists=0, penalty_minutes=0, goals_against=0
     )
 
+    # >>> NOVÝ BLOK: zajistí 1 řádek PlayerStats pro KAŽDÉHO nominovaného hráče
+    nominated_ids = list(
+        GameNomination.objects.filter(game=game).values_list("player_id", flat=True)
+    )
+    if nominated_ids:
+        existing_ids = set(
+            PlayerStats.objects.filter(game=game, player_id__in=nominated_ids)
+            .values_list("player_id", flat=True)
+        )
+        to_create = [pid for pid in nominated_ids if pid not in existing_ids]
+        if to_create:
+            PlayerStats.objects.bulk_create(
+                [PlayerStats(player_id=pid, game=game) for pid in to_create],
+                ignore_conflicts=True,
+            )
+
     # Góly
     for row in Goal.objects.filter(game=game).values("scorer").annotate(c=Count("id")):
         if row["scorer"] is None:

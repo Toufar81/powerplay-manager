@@ -1,4 +1,4 @@
-# file: powerplay_app/views/players.py
+
 """Players listing and detail views for the public Site.
 
 - PlayersListView  — list players of the primary team with position filters.
@@ -109,8 +109,10 @@ class PlayerDetailView(DetailView):
         # season window (league may be missing → no date limit)
         season_league, d1, d2 = resolve_season_window(p.team) if p.team_id else (None, None, None)
 
-        # season totals (cached)
-        totals = cached_player_totals(p, season_league=season_league, competitions=cmp)
+        # Pro souhrny omezuj na ligu jen když je zvolen filtr „liga“
+        league_arg = season_league if cmp == "league" else None
+        totals = cached_player_totals(p, season_league=league_arg, competitions=cmp)
+
 
         # per-game rows (PlayerStats -> Game)
         game_rows: list[dict[str, Any]] = []
@@ -121,10 +123,20 @@ class PlayerDetailView(DetailView):
                 .select_related("game", "game__home_team", "game__away_team")
                 .order_by("-game__starts_at")
             )
-            if d1 and d2:
-                qs = qs.filter(game__starts_at__date__gte=d1, game__starts_at__date__lte=d2)
-            if cmp != "all":
+
+            # soutěžní filtr + sezónní okno
+            if cmp == "league" and season_league:
+                qs = qs.filter(game__competition="league", game__league=season_league)
+            elif cmp != "all":
                 qs = qs.filter(game__competition=cmp)
+
+            # Sezónní okno použij jen pro vyloženě „tournament“ nebo „friendly“.
+            # Pro „all“ necháme VŠE (ať to souhlasí s adminem).
+            if d1 and d2 and cmp == "tournament":
+                qs = qs.filter(
+                    game__starts_at__date__gte=d1,
+                    game__starts_at__date__lte=d2,
+                )
 
             for st in qs:
                 g = st.game
@@ -147,16 +159,16 @@ class PlayerDetailView(DetailView):
                 g_val = getattr(st, "goals", 0) or 0
                 a_val = getattr(st, "assists", 0) or 0
 
-                # --- PIM: prefer PlayerStats.minutes; if empty/0, sum Penalty.minutes for this game/player
-                minutes = getattr(st, "minutes", None)
-                pim_val = minutes if minutes not in (None, 0) else (
-                    g.penalty_set.filter(
-                        penalized_player_id=p.id,
-                        team_id=p.team_id,
-                    ).aggregate(total=Sum("minutes"))["total"] or 0
+                # PIM: preferuj PlayerStats.penalty_minutes; pokud 0/None → součet z Penalty.minutes
+                pim_val = getattr(st, "penalty_minutes", None)
+                pim_val = pim_val if pim_val not in (None, 0) else (
+                        g.penalty_set.filter(
+                            penalized_player_id=p.id,
+                            team_id=p.team_id,
+                        ).aggregate(total=Sum("minutes"))["total"] or 0
                 )
 
-                # --- GA může být `ga` nebo `goals_against`
+                # GA může být `ga` nebo `goals_against`
                 ga_val = getattr(st, "ga", None)
                 if ga_val is None:
                     ga_val = getattr(st, "goals_against", 0)
@@ -175,8 +187,8 @@ class PlayerDetailView(DetailView):
                         "g": g_val,
                         "a": a_val,
                         "pts": pts_val,
-                        "pim": pim_val,          # ← minutes or fallback from Penalty
-                        "ga": ga_val,            # for goalies
+                        "pim": pim_val,  # minutes or fallback from Penalty
+                        "ga": ga_val,  # for goalies
                     }
                 )
 

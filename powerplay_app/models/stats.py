@@ -57,7 +57,9 @@ class PlayerStats(models.Model):
 
     @property
     def pim(self) -> int:
-        return getattr(self, "minutes", 0) or 0
+        """Convenience alias used in templates; mirrors 'penalty_minutes'."""
+        return int(getattr(self, "penalty_minutes", 0) or 0)
+
 
     def __str__(self) -> str:  # pragma: no cover - trivial
         """Readable label combining player and game."""
